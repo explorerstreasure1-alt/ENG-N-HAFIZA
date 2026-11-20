@@ -29,6 +29,24 @@ export interface Publication {
 
 export const STORAGE_KEY = "engin-hafiza-simple-v2";
 
+/**
+ * Private Vercel Blob store'dan gelen URL'leri, sunucu tarafindaki /api/image-proxy'ye
+ * yonlendirir ki tarayici duzgun gosterebilsin (403 hatasi yok olur).
+ * data:image/ veya / ile baslayan yerel/demo URL'ler degistirilmez.
+ */
+export function toViewableUrl(imageUrl: string): string {
+  if (!imageUrl || imageUrl.startsWith("data:") || imageUrl.startsWith("/")) return imageUrl;
+  try {
+    const u = new URL(imageUrl);
+    if (u.hostname.includes("vercel-storage.com")) {
+      return `/api/image-proxy?path=${encodeURIComponent(u.pathname)}`;
+    }
+  } catch {
+    // degistirme
+  }
+  return imageUrl;
+}
+
 /** Görsel bulunamazsa gösterilecek yer tutucu (harici dosya gerektirmez). */
 export const DEFAULT_IMAGE = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="880" viewBox="0 0 1000 880">
