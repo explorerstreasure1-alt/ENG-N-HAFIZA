@@ -188,13 +188,23 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     }
   };
 
-  const removePublication = (id: string) => {
+  const removePublication = async (id: string) => {
     if (!window.confirm("Bu yayını silmek istiyor musun?")) return;
+    try {
+      const res = await fetch(`/api/publications?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        notify("Silinemedi, tekrar deneyin.");
+        return;
+      }
+    } catch {
+      notify("Silinemedi, tekrar deneyin.");
+      return;
+    }
     setState((previous) => ({
       ...previous,
       publications: previous.publications.filter((item) => item.id !== id),
     }));
-    fetch(`/api/publications?id=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => undefined);
     notify("Yayın silindi.");
     playClick();
   };

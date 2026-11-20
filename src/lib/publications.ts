@@ -74,7 +74,20 @@ export async function deletePublication(id: string): Promise<void> {
   await writeMetadata(next);
   if (item) {
     try {
-      await del(item.imageUrl);
+      // Blob URL'den pathname'i çıkar (tam URL olabilir)
+      const imageUrl = item.imageUrl;
+      let pathname: string | undefined;
+      if (imageUrl && imageUrl.startsWith("http")) {
+        try {
+          const u = new URL(imageUrl);
+          pathname = u.pathname; // /engin-hafiza/img-xxx.jpg
+        } catch {}
+      } else {
+        pathname = imageUrl;
+      }
+      if (pathname) {
+        await del(pathname);
+      }
     } catch {
       // sessis
     }
