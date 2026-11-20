@@ -796,6 +796,58 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   box-shadow: 0 4px 10px rgba(0,0,0,.3);
 }
 .card-delete:active { background: #8b0000; }
+
+/* 3D Kart detay karuseli */
+.detail-3d-wrap {
+  padding: 0 0 26px;
+}
+.detail-3d-carousel {
+  perspective: 1400px;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 396px; position: relative; width: 100%;
+}
+.detail-card {
+  position: absolute;
+  width: 250px; height: 350px;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,.7);
+  background: #fff;
+  box-shadow: 0 28px 64px rgba(27,42,74,.14);
+  transition: all .75s cubic-bezier(.34,1.56,.64,1);
+  cursor: pointer;
+  display: flex; flex-direction: column;
+}
+.detail-card.center {
+  z-index: 40;
+  transform: translateX(0) scale(1) rotateY(0deg);
+  opacity: 1;
+  box-shadow: 0 40px 80px rgba(27,42,74,.22);
+}
+.detail-card.left {
+  z-index: 30;
+  transform: translateX(-58%) scale(.84) rotateY(-20deg);
+  opacity: .72;
+}
+.detail-card.right {
+  z-index: 30;
+  transform: translateX(58%) scale(.84) rotateY(20deg);
+  opacity: .72;
+}
+.detail-card.far-left { transform: translateX(-104%) scale(.62) rotateY(-32deg); opacity: .38; z-index: 20; }
+.detail-card.far-right { transform: translateX(104%) scale(.62) rotateY(32deg); opacity: .38; z-index: 20; }
+.detail-card:not(.center) { filter: blur(3px) grayscale(.25); }
+.detail-card__img { width: 100%; height: 220px; object-fit: cover; background: #fbfaf8; display: block; }
+.detail-card__glare {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,.35) 45%, rgba(255,255,255,0) 90%);
+  opacity: 0; transition: opacity .3s ease;
+}
+.detail-card.center .detail-card__glare { opacity: 1; }
+.detail-card__info { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.detail-card__icon { font-size: 14px; font-weight: 850; letter-spacing: .04em; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; border: 3px solid #8b0000; background: #1b2a4a; color: #fff; align-self: flex-start; box-shadow: 0 8px 20px rgba(27,42,74,.35); }
+.detail-card__title { font-weight: 850; font-size: 15px; color: #1b2a4a; line-height: 1.25; }
+.detail-card__sub { font-size: 11px; color: rgba(27,42,74,.55); margin-top: auto; }
 .nav-btn {
   width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(27,42,74,.13);
   background: var(--paper); color: var(--navy); font-size: 18px; cursor: pointer;
@@ -840,6 +892,58 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   box-shadow: 0 4px 10px rgba(0,0,0,.3);
 }
 .card-delete:active { background: #8b0000; }
+
+/* 3D Kart detay karuseli */
+.detail-3d-wrap {
+  padding: 0 0 26px;
+}
+.detail-3d-carousel {
+  perspective: 1400px;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 396px; position: relative; width: 100%;
+}
+.detail-card {
+  position: absolute;
+  width: 250px; height: 350px;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,.7);
+  background: #fff;
+  box-shadow: 0 28px 64px rgba(27,42,74,.14);
+  transition: all .75s cubic-bezier(.34,1.56,.64,1);
+  cursor: pointer;
+  display: flex; flex-direction: column;
+}
+.detail-card.center {
+  z-index: 40;
+  transform: translateX(0) scale(1) rotateY(0deg);
+  opacity: 1;
+  box-shadow: 0 40px 80px rgba(27,42,74,.22);
+}
+.detail-card.left {
+  z-index: 30;
+  transform: translateX(-58%) scale(.84) rotateY(-20deg);
+  opacity: .72;
+}
+.detail-card.right {
+  z-index: 30;
+  transform: translateX(58%) scale(.84) rotateY(20deg);
+  opacity: .72;
+}
+.detail-card.far-left { transform: translateX(-104%) scale(.62) rotateY(-32deg); opacity: .38; z-index: 20; }
+.detail-card.far-right { transform: translateX(104%) scale(.62) rotateY(32deg); opacity: .38; z-index: 20; }
+.detail-card:not(.center) { filter: blur(3px) grayscale(.25); }
+.detail-card__img { width: 100%; height: 220px; object-fit: cover; background: #fbfaf8; display: block; }
+.detail-card__glare {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,.35) 45%, rgba(255,255,255,0) 90%);
+  opacity: 0; transition: opacity .3s ease;
+}
+.detail-card.center .detail-card__glare { opacity: 1; }
+.detail-card__info { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.detail-card__icon { font-size: 14px; font-weight: 850; letter-spacing: .04em; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; border: 3px solid #8b0000; background: #1b2a4a; color: #fff; align-self: flex-start; box-shadow: 0 8px 20px rgba(27,42,74,.35); }
+.detail-card__title { font-weight: 850; font-size: 15px; color: #1b2a4a; line-height: 1.25; }
+.detail-card__sub { font-size: 11px; color: rgba(27,42,74,.55); margin-top: auto; }
 .nav-btn {
   width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(27,42,74,.13);
   background: var(--paper); color: var(--navy); font-size: 18px; cursor: pointer;

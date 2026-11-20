@@ -362,7 +362,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             </section>
           )}
 
-          {/* ---- 4. DETAY (FLIP) ---- */}
+          {/* ---- 4. DETAY (3D KARUSEL) ---- */}
           {step === "detail" && selectedCardId && (
             <section className="step-fade">
               <div style={{ padding: "0 8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -375,57 +375,75 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                     return (
                       <>
                         {prevCard && (
-                          <button type="button" className="nav-btn" onClick={(e) => { e.stopPropagation(); setSelectedCardId(prevCard.id); setFlipped(false); playClick(); }} aria-label="Önceki kart">‹</button>
+                          <button type="button" className="nav-btn" onClick={(e) => { e.stopPropagation(); setSelectedCardId(prevCard.id); playClick(); }} aria-label="Önceki kart">‹</button>
                         )}
                         {nextCard && (
-                          <button type="button" className="nav-btn" onClick={(e) => { e.stopPropagation(); setSelectedCardId(nextCard.id); setFlipped(false); playClick(); }} aria-label="Sonraki kart">›</button>
+                          <button type="button" className="nav-btn" onClick={(e) => { e.stopPropagation(); setSelectedCardId(nextCard.id); playClick(); }} aria-label="Sonraki kart">›</button>
                         )}
                       </>
                     );
                   })()}
                 </div>
               </div>
-              {(() => {
-                const item = state.publications.find((p) => p.id === selectedCardId);
-                if (!item) return null;
-                return (
-                <div style={{ maxWidth: 420, margin: "0 auto" }}>
-                  <div className="flip-stage">
-                    <div className={`flip-card ${flipped ? "is-flipped" : ""}`} onClick={() => { tap(); setFlipped((p) => !p); playPop(); }}>
-                      <div className="flip-face front">
-                        <button type="button" className="flip-close" onClick={(e) => { e.stopPropagation(); setStep("cards"); playClick(); }} aria-label="Kapat">✕</button>
+              <div className="detail-3d-wrap">
+                <div className="detail-3d-carousel" role="list" aria-label="3D kart detayı">
+                  {filteredCards.map((item, index) => {
+                    const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
+                    const topic = topicMap.get(item.topicId);
+                    const centerIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
+                    const offset = index - centerIndex;
+                    let position: "far-left" | "left" | "center" | "right" | "far-right" = "center";
+                    if (offset <= -2) position = "far-left";
+                    else if (offset === -1) position = "left";
+                    else if (offset === 1) position = "right";
+                    else if (offset >= 2) position = "far-right";
+                    const isCenter = position === "center";
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={`detail-card ${position} ${isCenter ? "center" : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          tap();
+                          setSelectedCardId(item.id);
+                          playSuccess();
+                        }}
+                        aria-label={`${language.name} · ${topic?.title ?? "Konu"}`}
+                        style={{ zIndex: isCenter ? 40 : 30 - Math.abs(offset) }}
+                      >
                         <img
-                          className="flip-img"
+                          className="detail-card__img"
                           src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
-                          alt={item.languageId}
+                          alt={`${language.name} · ${topic?.title ?? "Konu"}`}
                           loading="lazy"
                           onError={(event) => {
                             event.currentTarget.onerror = null;
                             event.currentTarget.src = DEFAULT_IMAGE;
                           }}
                         />
-                        <span className="flip-shine" aria-hidden="true" />
-                        <span className="flip-front-info">
-                          <span className="flip-front-emoji">{topicIcons[item.topicId] ?? "✨"}</span>
-                          <strong>{languageMap.get(item.languageId)?.name ?? "Dil"}</strong>
-                          <small>{topicMap.get(item.topicId)?.title ?? "Konu"} · {item.level}</small>
-                        </span>
-                      </div>
-                      <div className="flip-face back">
-                        <span className="flip-emoji">{topicIcons[item.topicId] ?? "✨"}</span>
-                        <span className="flip-title">{languageMap.get(item.languageId)?.name ?? "Dil"}</span>
-                        <span className="flip-meta">{topicMap.get(item.topicId)?.title ?? "Konu"}</span>
-                        <span className="flip-meta" style={{ marginTop: 4, opacity: .8 }}>{item.level}</span>
-                        <button type="button" className="flip-back-btn" onClick={() => { tap(); setFlipped(false); playPop(); }} aria-label="Öne dön">Öne dön</button>
-                      </div>
-                    </div>
-                  </div>
-                  <p style={{ marginTop: 12, textAlign: "center", fontSize: 12, color: "rgba(27,42,74,.5)" }}>
-                    Kartı çevirmek için dokun
-                  </p>
+                        <div className="detail-card__glare" />
+                        <div className="detail-card__info">
+                          <span className="detail-card__icon">{language.icon}</span>
+                          <span className="detail-card__title">{language.name}</span>
+                          <span className="detail-card__sub">{topic?.title ?? "Konu"} · {item.level}</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="card-delete"
+                          onClick={(e) => { e.stopPropagation(); removePublication(item.id); }}
+                          aria-label="Kartı sil"
+                        >
+                          ✕
+                        </button>
+                      </button>
+                    );
+                  })}
                 </div>
-              );
-              })()}
+              </div>
+              <p style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "rgba(27,42,74,.45)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
+                Sağ · sola kaydır · merkezdekine dokun
+              </p>
             </section>
           )}
         </div>
