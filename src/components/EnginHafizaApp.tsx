@@ -58,9 +58,9 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
 
   useEffect(() => {
     const local = loadState(initialPublications);
-    const serverIds = new Set(initialPublications.map((item) => item.id));
-    const localOnly = local.publications.filter((item) => !serverIds.has(item.id));
-    setState({ ...local, publications: [...initialPublications, ...localOnly] });
+    const localIds = new Set(local.publications.map((item) => item.id));
+    const serverOnly = initialPublications.filter((item) => !localIds.has(item.id));
+    setState({ ...local, publications: [...local.publications, ...serverOnly] });
     setHydrated(true);
   }, [initialPublications]);
 
@@ -188,23 +188,15 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     }
   };
 
-  const removePublication = async (id: string) => {
+  const removePublication = (id: string) => {
     if (!window.confirm("Bu yayını silmek istiyor musun?")) return;
-    try {
-      const res = await fetch(`/api/publications?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        notify("Silinemedi, tekrar deneyin.");
-        return;
-      }
-    } catch {
-      notify("Silinemedi, tekrar deneyin.");
-      return;
-    }
+    // Yerel state'i hemen güncelle (localStorage'e persistState ile yazılır)
     setState((previous) => ({
       ...previous,
       publications: previous.publications.filter((item) => item.id !== id),
     }));
+    // Sunucuya silmeyi deney (best effort, beklemeden devam et)
+    fetch(`/api/publications?id=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => undefined);
     notify("Yayın silindi.");
     playClick();
   };
