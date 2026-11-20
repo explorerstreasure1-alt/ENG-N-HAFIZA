@@ -36,14 +36,7 @@ export const STORAGE_KEY = "engin-hafiza-simple-v2";
  */
 export function toViewableUrl(imageUrl: string): string {
   if (!imageUrl || imageUrl.startsWith("data:") || imageUrl.startsWith("/")) return imageUrl;
-  try {
-    const u = new URL(imageUrl);
-    if (u.hostname.includes("vercel-storage.com")) {
-      return `/api/image-proxy?path=${encodeURIComponent(u.pathname)}`;
-    }
-  } catch {
-    // degistirme
-  }
+  // Görseller public olarak yüklendiği için doğrudan URL döndürülür (proxy'ye gerek yok)
   return imageUrl;
 }
 

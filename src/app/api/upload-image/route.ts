@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<Response> {
     const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
     const blob = await put(`engin-hafiza/${makeId("img")}-${safeFileName}`, file, {
-      access: "private",
+      access: "public",
       cacheControlMaxAge: 31536000,
       contentType: file.type,
       addRandomSuffix: true,
