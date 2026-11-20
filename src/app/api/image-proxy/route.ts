@@ -4,10 +4,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
-  const path = searchParams.get("path");
+  let path = searchParams.get("path");
   if (!path) {
     return new Response("Missing path", { status: 400 });
   }
+  if (path.startsWith("/")) path = path.slice(1);
 
   try {
     const blob = await get(path, { access: "private" });
