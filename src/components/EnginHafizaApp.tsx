@@ -372,7 +372,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                           className="image-cell__img"
                           src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
                           alt={`Görsel ${index + 1}`}
-                          loading="lazy"
+                          loading="eager"
+                          decoding="async"
                           onError={(event) => {
                             event.currentTarget.onerror = null;
                             event.currentTarget.src = DEFAULT_IMAGE;
@@ -448,7 +449,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                           className="detail-card__img"
                           src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
                           alt={`${language.name} · ${topic?.title ?? "Konu"}`}
-                          loading="lazy"
+                          loading="eager"
+                          decoding="async"
                           onError={(event) => {
                             event.currentTarget.onerror = null;
                             event.currentTarget.src = DEFAULT_IMAGE;
