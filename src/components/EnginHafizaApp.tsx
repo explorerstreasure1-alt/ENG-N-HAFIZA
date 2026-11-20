@@ -1,0 +1,556 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import {
+  createInitialState,
+  loadState,
+  persistState,
+  type LocalState,
+} from "@/lib/client-utils";
+import { LANGUAGE_SEEDS, TOPICS } from "@/lib/seed";
+import { DEFAULT_IMAGE, type Publication } from "@/lib/types";
+import { playClick, playPop, playSuccess, initSound } from "@/lib/sound";
+import Sparkles, { emitSparkleBurst, onSparkleBurst } from "@/components/Sparkles";
+
+interface EnginHafizaAppProps {
+  initialPublications: Publication[];
+}
+
+type Step = "language" | "topic" | "cards" | "detail";
+
+const languageMap = new Map(LANGUAGE_SEEDS.map((item) => [item.id, item]));
+const topicMap = new Map(TOPICS.map((item) => [item.id, item]));
+
+const topicIcons: Record<string, string> = {
+  "A1-1": "🔤", "A1-2": "👋", "A1-3": "🔢", "A1-4": "👨‍👩‍👧‍👦", "A1-5": "🎨", "A1-6": "🍎", "A1-7": "🍳", "A1-8": "🧭",
+  "A2-1": "🛒", "A2-2": "🏥", "A2-3": "🌤️", "A2-4": "🎮", "A2-5": "🕰️", "A2-6": "🏠", "A2-7": "🍽️",
+  "B1-1": "💼", "B1-2": "❤️", "B1-3": "🎓", "B1-4": "🔗", "B1-5": "🤝", "B1-6": "📰",
+  "B2-1": "💬", "B2-2": "💭", "B2-3": "🗣️", "B2-4": "🎭", "B2-5": "⚙️",
+  "C1-1": "📚", "C1-2": "✍️", "C1-3": "⚖️", "C1-4": "🎯",
+};
+
+export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppProps) {
+  const [state, setState] = useState<LocalState>(() => createInitialState(initialPublications));
+  const [hydrated, setHydrated] = useState(false);
+  const [step, setStep] = useState<Step>("language");
+  const [draftImage, setDraftImage] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [flipped, setFlipped] = useState(false);
+  const toastTimer = useRef<number | null>(null);
+  const soundReady = useRef(false);
+
+  const notify = useCallback((message: string) => {
+    setToast(message);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  useEffect(() => {
+    initSound();
+    soundReady.current = true;
+  }, []);
+
+  useEffect(() => {
+    const local = loadState(initialPublications);
+    const serverIds = new Set(initialPublications.map((item) => item.id));
+    const localOnly = local.publications.filter((item) => !serverIds.has(item.id));
+    setState({ ...local, publications: [...initialPublications, ...localOnly] });
+    setHydrated(true);
+  }, [initialPublications]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      persistState(state);
+    } catch {
+      notify("Depolama alanı dolu.");
+    }
+  }, [hydrated, notify, state]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    };
+  }, []);
+
+  const tap = (x?: number, y?: number) => {
+    if (!soundReady.current) return;
+    playClick();
+    if (x != null && y != null) emitSparkleBurst(x, y);
+  };
+
+  const selectedLanguage = languageMap.get(state.languageId) ?? LANGUAGE_SEEDS[0];
+  const selectedTopic = topicMap.get(state.topicId) ?? TOPICS[0];
+
+  const goLanguage = (e?: React.MouseEvent, id?: string) => {
+    if (e) { e.stopPropagation(); tap(e.clientX, e.clientY); }
+    setState((previous) => ({ ...previous, languageId: id ?? state.languageId }));
+    setStep("topic");
+    playPop();
+  };
+
+  const goTopic = (e?: React.MouseEvent, id?: string) => {
+    if (e) { e.stopPropagation(); tap(e.clientX, e.clientY); }
+    setState((previous) => ({ ...previous, topicId: id ?? state.topicId }));
+    setStep("cards");
+    playPop();
+  };
+
+  const goCards = (e?: React.MouseEvent, id?: string) => {
+    if (e) { e.stopPropagation(); tap(e.clientX, e.clientY); }
+    setSelectedCardId(id ?? null);
+    setFlipped(false);
+    setStep("cards");
+    playPop();
+  };
+
+  const goDetail = (id: string) => {
+    setSelectedCardId(id);
+    setFlipped(false);
+    setStep("detail");
+    playSuccess();
+  };
+
+  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      const previewUrl = URL.createObjectURL(file);
+      setDraftImage(previewUrl);
+      setFileName(file.name);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload-image", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.ok && data.url) {
+        URL.revokeObjectURL(previewUrl);
+        setDraftImage(data.url);
+        notify("Görsel hazır. Yayına ekle'ye dokun.");
+      } else {
+        URL.revokeObjectURL(previewUrl);
+        setDraftImage(null);
+        notify(data.error || "Görsel yüklenemedi.");
+      }
+    } catch (error) {
+      notify(error instanceof Error ? error.message : "Görsel yüklenemedi.");
+    } finally {
+      setBusy(false);
+      input.value = "";
+    }
+  };
+
+  const publish = async () => {
+    if (!draftImage || publishing) return;
+    const topic = topicMap.get(state.topicId) ?? TOPICS[0];
+    const item: Publication = {
+      id: `pub-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      languageId: state.languageId,
+      level: topic.level,
+      topicId: state.topicId,
+      imageUrl: draftImage,
+      createdAt: new Date().toISOString(),
+    };
+    setPublishing(true);
+    setState((previous) => ({ ...previous, publications: [item, ...previous.publications] }));
+    setDraftImage(null);
+    setFileName("");
+    try {
+      const response = await fetch("/api/publications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      const data = (await response.json()) as { ok?: boolean; publication?: Publication };
+      if (response.ok && data.ok && data.publication) {
+        const saved = data.publication;
+        setState((previous) => ({
+          ...previous,
+          publications: previous.publications.map((entry) => (entry.id === item.id ? saved : entry)),
+        }));
+        notify("Yayın ana sayfaya eklendi.");
+        playSuccess();
+      } else {
+        notify("Cihazda kaydedildi.");
+      }
+    } catch {
+      notify("Cihazda kaydedildi.");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const removePublication = (id: string) => {
+    if (!window.confirm("Bu yayını silmek istiyor musun?")) return;
+    setState((previous) => ({
+      ...previous,
+      publications: previous.publications.filter((item) => item.id !== id),
+    }));
+    fetch(`/api/publications?id=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => undefined);
+    notify("Yayın silindi.");
+    playClick();
+  };
+
+  const filteredCards = state.publications.filter(
+    (item) => item.languageId === state.languageId && item.topicId === state.topicId,
+  );
+
+  const back = () => {
+    if (step === "detail") { setStep("cards"); playClick(); return; }
+    if (step === "cards") { setStep("topic"); playClick(); return; }
+    if (step === "topic") { setStep("language"); playClick(); return; }
+  };
+
+  return (
+    <div className="app-shell">
+      <Sparkles />
+      <header className="app-header">
+        {step !== "language" && (
+          <button type="button" className="nav-back" onClick={back} aria-label="Geri">‹ Geri</button>
+        )}
+        <div className="brand">
+          <span className="brand-mark">EH</span>
+          <span className="brand-text"><strong>ENGIN HAFIZA</strong><small>TATLI 3D KART AKIŞI</small></span>
+        </div>
+        <span className="header-count">{state.publications.length} yayın</span>
+      </header>
+
+      <main className="app-main">
+        <div className="step-wrap">
+          {/* ---- 1. DİL ---- */}
+          {step === "language" && (
+            <section className="step-fade">
+              <div style={{ padding: "0 8px 10px" }}>
+                <span style={{ display: "inline-block", padding: "6px 10px", borderRadius: 8, background: "rgba(139,0,0,.09)", color: "#8b0000", fontSize: 10, fontWeight: 850, letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 10 }}>
+                  Adım 1 · Dil seç
+                </span>
+              </div>
+              <div className="cute-grid cute-grid--covers">
+                {LANGUAGE_SEEDS.map((language) => (
+                  <button
+                    type="button"
+                    key={language.id}
+                    className={`cute-card cute-card--cover ${state.languageId === language.id ? "is-active" : ""}`}
+                    onClick={(e) => goLanguage(e, language.id)}
+                    aria-label={`${language.name} · ${language.nativeName}`}
+                  >
+                    <span className="cover-frame">
+                      {language.cover ? (
+                        <img
+                          src={language.cover}
+                          alt={`${language.name} · ${language.nativeName}`}
+                          loading="eager"
+                          decoding="async"
+                        />
+                      ) : (
+                        <span className="cover-fallback">
+                          <span className="cover-fallback__icon">{language.icon}</span>
+                          <span className="cover-caption">
+                            <strong>{language.name}</strong>
+                            <small>{language.nativeName}</small>
+                          </span>
+                        </span>
+                      )}
+                      <span className="cover-shine" aria-hidden="true" />
+                      <span className="cover-scrim" aria-hidden="true" />
+                      <span className="cover-badge">{language.icon}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginTop: 14, display: "flex", justifyContent: "center", gap: 8 }}>
+                <button type="button" className="btn-cute" style={{ padding: "12px 24px", fontSize: 14 }} onClick={(e) => { tap(e.clientX, e.clientY); setStep("cards"); playPop(); }}>
+                  Hızlı ilerle
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* ---- 2. KONU ---- */}
+          {step === "topic" && (
+            <section className="step-fade">
+              <div style={{ padding: "0 8px 10px" }}>
+                <span style={{ display: "inline-block", padding: "6px 10px", borderRadius: 8, background: "rgba(139,0,0,.09)", color: "#8b0000", fontSize: 10, fontWeight: 850, letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 10 }}>
+                  Adım 2 · Konu seç ({selectedLanguage.name})
+                </span>
+              </div>
+              <div className="cute-grid">
+                {TOPICS.map((topic) => (
+                  <button
+                    type="button"
+                    key={topic.id}
+                    className={`cute-card ${state.topicId === topic.id ? "is-active" : ""}`}
+                    onClick={(e) => goTopic(e, topic.id)}
+                    aria-label={topic.title}
+                  >
+                    <span className="cute-card__ring">{topicIcons[topic.id] ?? "✨"}</span>
+                    <span className="cute-card__title">{topic.title}</span>
+                    <span className="cute-card__sub">{topic.level}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ---- 3. 3D KELİME KARTLAR ---- */}
+          {step === "cards" && (
+            <section className="step-fade">
+              <div style={{ padding: "0 8px 10px" }}>
+                <span style={{ display: "inline-block", padding: "6px 10px", borderRadius: 8, background: "rgba(139,0,0,.09)", color: "#8b0000", fontSize: 10, fontWeight: 850, letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 10 }}>
+                  Adım 3 · Kelime kartları
+                </span>
+              </div>
+              {filteredCards.length === 0 ? (
+                <div className="empty-cute">
+                  <span className="emoji">🃏</span>
+                  <strong>Henüz bu konuda yayın yok</strong>
+                  <p style={{ margin: "8px 0 0", fontSize: 13, color: "rgba(27,42,74,.5)" }}>
+                    Admin panelinden yeni bir ekleyebilirsin.
+                  </p>
+                  <button type="button" className="btn-outline" onClick={() => { tap(); setStep("language"); }} style={{ marginTop: 12 }}>(Başa dön)</button>
+                </div>
+              ) : (
+                <>
+                  <div className="carousel-wrap">
+                    <div className="carousel-3d" role="list" aria-label="Kelime kartları">
+                      {filteredCards.map((item, index) => {
+                        const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
+                        const topic = topicMap.get(item.topicId);
+                        const centerIndex = Math.floor(filteredCards.length / 2);
+                        const offset = index - centerIndex;
+                        let position: "far-left" | "left" | "center" | "right" | "far-right" = "center";
+                        if (offset <= -2) position = "far-left";
+                        else if (offset === -1) position = "left";
+                        else if (offset === 1) position = "right";
+                        else if (offset >= 2) position = "far-right";
+                        const isCenter = position === "center";
+                        return (
+                          <button
+                            type="button"
+                            key={item.id}
+                            className={`card-3d ${position} ${isCenter ? "center" : ""}`}
+                            aria-label={`${language.name} · ${topic?.title ?? "Konu"}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              tap(e.clientX, e.clientY);
+                              if (isCenter) goDetail(item.id);
+                              else {
+                                // brought to center by reordering is complex; just select it
+                                setSelectedCardId(item.id);
+                                setFlipped(false);
+                                setStep("detail");
+                                playSuccess();
+                              }
+                            }}
+                            style={{ zIndex: isCenter ? 40 : 30 - Math.abs(offset) }}
+                          >
+                            <img
+                              className="card-3d__img"
+                              src={item.imageUrl || DEFAULT_IMAGE}
+                              alt={`${language.name} · ${topic?.title ?? "Konu"}`}
+                              loading="lazy"
+                              onError={(event) => {
+                                event.currentTarget.onerror = null;
+                                event.currentTarget.src = DEFAULT_IMAGE;
+                              }}
+                            />
+                            <div className="card-3d__glare" />
+                            <div className="card-3d__info">
+                              <span className="card-3d__icon">{language.icon}</span>
+                              <span className="card-3d__title">{language.name}</span>
+                              <span className="card-3d__sub">{topic?.title ?? "Konu"} · {item.level}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="carousel-nav">
+                      {filteredCards.map((_, index) => (
+                        <button
+                          type="button"
+                          key={index}
+                          className={`dot ${Math.floor(filteredCards.length / 2) === index ? "is-active" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            tap(e.clientX, e.clientY);
+                            const item = filteredCards[index];
+                            setSelectedCardId(item.id);
+                            setFlipped(false);
+                            setStep("detail");
+                            playSuccess();
+                          }}
+                          aria-label={`${index + 1}. kart`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "rgba(27,42,74,.45)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
+                    Ortadaki kartı seç · yanlardakilere de dokunabilirsin
+                  </p>
+                </>
+              )}
+            </section>
+          )}
+
+          {/* ---- 4. DETAY (FLIP) ---- */}
+          {step === "detail" && selectedCardId && (
+            <section className="step-fade">
+              <div style={{ padding: "0 8px 10px" }}>
+                <button type="button" className="nav-back" onClick={() => { setStep("cards"); playClick(); }} aria-label="Kartlara dön">‹ Kartlara dön</button>
+              </div>
+              {(() => {
+                const item = state.publications.find((p) => p.id === selectedCardId);
+                if (!item) return null;
+                return (
+                <div style={{ maxWidth: 420, margin: "0 auto" }}>
+                  <div className="flip-stage">
+                    <div className={`flip-card ${flipped ? "is-flipped" : ""}`} onClick={() => { tap(); setFlipped((p) => !p); playPop(); }}>
+                      <div className="flip-face front">
+                        <button type="button" className="flip-close" onClick={(e) => { e.stopPropagation(); setStep("cards"); playClick(); }} aria-label="Kapat">✕</button>
+                        <img
+                          className="flip-img"
+                          src={item.imageUrl || DEFAULT_IMAGE}
+                          alt={item.languageId}
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = DEFAULT_IMAGE;
+                          }}
+                        />
+                        <span className="flip-shine" aria-hidden="true" />
+                        <span className="flip-front-info">
+                          <span className="flip-front-emoji">{topicIcons[item.topicId] ?? "✨"}</span>
+                          <strong>{languageMap.get(item.languageId)?.name ?? "Dil"}</strong>
+                          <small>{topicMap.get(item.topicId)?.title ?? "Konu"} · {item.level}</small>
+                        </span>
+                      </div>
+                      <div className="flip-face back">
+                        <span className="flip-emoji">{topicIcons[item.topicId] ?? "✨"}</span>
+                        <span className="flip-title">{languageMap.get(item.languageId)?.name ?? "Dil"}</span>
+                        <span className="flip-meta">{topicMap.get(item.topicId)?.title ?? "Konu"}</span>
+                        <span className="flip-meta" style={{ marginTop: 4, opacity: .8 }}>{item.level}</span>
+                        <button type="button" className="flip-back-btn" onClick={() => { tap(); setFlipped(false); playPop(); }} aria-label="Öne dön">Öne dön</button>
+                      </div>
+                    </div>
+                  </div>
+                  <p style={{ marginTop: 12, textAlign: "center", fontSize: 12, color: "rgba(27,42,74,.5)" }}>
+                    Kartı çevirmek için dokun
+                  </p>
+                </div>
+              );
+              })()}
+            </section>
+          )}
+        </div>
+      </main>
+
+      <footer className="app-footer">ENGIN HAFIZA · 3D kart akışı</footer>
+
+      {/* Yükleme alanı (ana sayfada, admin tarzında) */}
+      <section
+        className="composer"
+        aria-label="Yeni yayın ekle"
+        style={{ marginTop: 26 }}
+      >
+        <div className="composer-head">
+          <span>YENİ YAYIN</span>
+          <span>GÖRSEL YÜKLE</span>
+        </div>
+        <div className="form-step">
+          <div className="step-head">
+            <span className="step-number">01</span>
+            <span><strong>Dil seç</strong><small>{LANGUAGE_SEEDS.length} dil</small></span>
+          </div>
+          <div className="select-wrap">
+            <span className="select-code">{selectedLanguage.icon}</span>
+            <select
+              aria-label="Dil seç"
+              value={state.languageId}
+              onChange={(event) => setState((previous) => ({ ...previous, languageId: event.target.value }))}
+            >
+              {LANGUAGE_SEEDS.map((language) => (
+                <option key={language.id} value={language.id}>{language.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="form-step">
+          <div className="step-head">
+            <span className="step-number">02</span>
+            <span><strong>Konu seç</strong><small>A1–C1 · konular</small></span>
+          </div>
+          <div className="select-wrap">
+            <span className="select-code is-level">{selectedTopic.level}</span>
+            <select
+              aria-label="Konu seç"
+              value={state.topicId}
+              onChange={(event) => setState((previous) => ({ ...previous, topicId: event.target.value }))}
+            >
+              {TOPICS.map((topic) => (
+                <option key={topic.id} value={topic.id}>{topic.title}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="form-step is-last">
+          <div className="step-head">
+            <span className="step-number">03</span>
+            <span><strong>Görsel yükle</strong><small>Fotoğraf veya galeri</small></span>
+          </div>
+          <label className={`upload-zone ${draftImage ? "has-image" : ""}`} htmlFor="image-file">
+            {draftImage ? (
+              <>
+                <img src={draftImage} alt="Yayınlanacak görsel önizlemesi" />
+                <span className="upload-overlay">Değiştir</span>
+              </>
+            ) : (
+              <span className="upload-placeholder">
+                <span className="upload-icon">📷</span>
+                <strong>{busy ? "Hazırlanıyor..." : "Görsel seç"}</strong>
+                <small>Dokun ve fotoğrafını yükle</small>
+              </span>
+            )}
+          </label>
+          <input
+            id="image-file"
+            className="file-input"
+            type="file"
+            accept="image/*"
+            onChange={handleFile}
+            disabled={busy || publishing}
+          />
+          {fileName && <div className="file-name">Seçildi: {fileName}</div>}
+        </div>
+        <div className="selection-summary">
+          <span>{selectedLanguage.icon}</span>
+          <strong>{selectedLanguage.name}</strong>
+          <span className="summary-dot">·</span>
+          <span>{selectedTopic.level}</span>
+          <span className="summary-dot">·</span>
+          <span className="summary-topic">{selectedTopic.title}</span>
+        </div>
+        <button
+          type="button"
+          className="publish-button"
+          onClick={publish}
+          disabled={!draftImage || busy || publishing}
+        >
+          {publishing ? "Ekleniyor..." : "Yayına ekle"}
+        </button>
+      </section>
+
+      {toast && (
+        <div className="toast toast-info" role="status">
+          <span className="toast-dot" />{toast}
+        </div>
+      )}
+    </div>
+  );
+}
