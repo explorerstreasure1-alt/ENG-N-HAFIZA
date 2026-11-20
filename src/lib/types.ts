@@ -36,7 +36,7 @@ export const STORAGE_KEY = "engin-hafiza-simple-v2";
  */
 export function toViewableUrl(imageUrl: string): string {
   if (!imageUrl || imageUrl.startsWith("data:") || imageUrl.startsWith("/")) return imageUrl;
-  // Görseller public olarak yüklendiği için doğrudan URL döndürülür (proxy'ye gerek yok)
+  // Görseller public olarak yüklendiği için doğrudan URL döndürülür
   return imageUrl;
 }
 
