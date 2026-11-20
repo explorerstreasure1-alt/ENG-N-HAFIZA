@@ -412,8 +412,25 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
           {/* ---- 4. DETAY (FLIP) ---- */}
           {step === "detail" && selectedCardId && (
             <section className="step-fade">
-              <div style={{ padding: "0 8px 10px" }}>
+              <div style={{ padding: "0 8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <button type="button" className="nav-back" onClick={() => { setStep("cards"); playClick(); }} aria-label="Kartlara dön">‹ Kartlara dön</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {(() => {
+                    const currentIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
+                    const prevCard = currentIndex > 0 ? filteredCards[currentIndex - 1] : null;
+                    const nextCard = currentIndex < filteredCards.length - 1 ? filteredCards[currentIndex + 1] : null;
+                    return (
+                      <>
+                        {prevCard && (
+                          <button type="button" className="nav-btn" onClick={(e) => { e.stopPropagation(); setSelectedCardId(prevCard.id); setFlipped(false); playClick(); }} aria-label="Önceki kart">‹</button>
+                        )}
+                        {nextCard && (
+                          <button type="button" className="nav-btn" onClick={(e) => { e.stopPropagation(); setSelectedCardId(nextCard.id); setFlipped(false); playClick(); }} aria-label="Sonraki kart">›</button>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
               {(() => {
                 const item = state.publications.find((p) => p.id === selectedCardId);
