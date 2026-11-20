@@ -319,15 +319,13 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                   <button type="button" className="btn-outline" onClick={() => { tap(); setStep("language"); }} style={{ marginTop: 12 }}>(Başa dön)</button>
                 </div>
               ) : (
-                <div className="card-list">
+                <div className="image-grid">
                   {filteredCards.map((item, index) => {
-                    const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
-                    const topic = topicMap.get(item.topicId);
                     return (
                       <button
                         type="button"
                         key={item.id}
-                        className="list-card"
+                        className="image-cell"
                         onClick={(e) => {
                           e.stopPropagation();
                           tap();
@@ -336,25 +334,18 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                           setStep("detail");
                           playSuccess();
                         }}
-                        aria-label={`${language.name} · ${topic?.title ?? "Konu"}`}
+                        aria-label={`Görsel ${index + 1}`}
                       >
                         <img
-                          className="list-card__img"
+                          className="image-cell__img"
                           src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
-                          alt={`${language.name} · ${topic?.title ?? "Konu"}`}
+                          alt={`Görsel ${index + 1}`}
                           loading="lazy"
                           onError={(event) => {
                             event.currentTarget.onerror = null;
                             event.currentTarget.src = DEFAULT_IMAGE;
                           }}
                         />
-                        <div className="list-card__info">
-                          <div className="list-card__header">
-                            <span className="list-card__icon">{language.icon}</span>
-                            <span className="list-card__title">{language.name}</span>
-                          </div>
-                          <span className="list-card__sub">{topic?.title ?? "Konu"} · {item.level}</span>
-                        </div>
                         <button
                           type="button"
                           className="card-delete"
