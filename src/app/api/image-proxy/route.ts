@@ -11,7 +11,7 @@ export async function GET(request: Request): Promise<Response> {
   if (path.startsWith("/")) path = path.slice(1);
 
   try {
-    const blob = await get(path, { access: "private" });
+    const blob = await get(path, { access: "public" });
     if (!blob || !blob.stream) {
       return new Response("Not found", { status: 404 });
     }
