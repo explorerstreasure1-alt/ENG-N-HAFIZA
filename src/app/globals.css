@@ -810,7 +810,7 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(27,42,74,.18); border: 0; cursor: pointer; transition: all .3s; }
 .dot.is-active { background: #8b0000; width: 26px; border-radius: 6px; }
 
-/* Görsel grid (2 sütun) */
+/* Görsel grid (2 sütun, 3D kart hissi) */
 .image-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -820,14 +820,15 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 .image-cell {
   position: relative;
   aspect-ratio: 3 / 4;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: var(--paper);
-  box-shadow: 0 8px 22px rgba(27,42,74,.07);
-  transition: transform .15s ease, box-shadow .15s ease;
+  background: var(--white);
+  box-shadow: 0 24px 48px rgba(27,42,74,.18);
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease, filter .25s ease;
+  filter: drop-shadow(0 20px 30px rgba(27,42,74,.25));
 }
-.image-cell:active { transform: scale(.97); box-shadow: 0 12px 28px rgba(27,42,74,.14); }
+.image-cell:active { transform: scale(.96); box-shadow: 0 32px 56px rgba(27,42,74,.24); }
 .image-cell__img {
   width: 100%; height: 100%; object-fit: cover; display: block;
 }
