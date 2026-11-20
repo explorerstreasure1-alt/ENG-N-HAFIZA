@@ -875,3 +875,26 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 .empty-cute { text-align: center; padding: 40px 16px; color: rgba(27,42,74,.55); }
 .empty-cute .emoji { font-size: 56px; display: block; margin-bottom: 12px; opacity: .6; }
 .empty-cute strong { display: block; font-size: 17px; color: #1b2a4a; margin-bottom: 6px; }
+
+/* PWA uygulama yükle butonu (sağ üst) */
+.install-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+.install-btn:active { transform: scale(.96); }
+
+@media (max-width: 360px) {
+  .install-btn { top: 12px; right: 12px; font-size: 11px; padding: 8px 12px; }
+}

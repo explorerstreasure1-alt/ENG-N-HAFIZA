@@ -12,6 +12,7 @@ import { LANGUAGE_SEEDS, TOPICS } from "@/lib/seed";
 import { DEFAULT_IMAGE, type Publication } from "@/lib/types";
 import { playClick, playPop, playSuccess, initSound } from "@/lib/sound";
 import Sparkles, { emitSparkleBurst, onSparkleBurst } from "@/components/Sparkles";
+import AppInstallButton from "@/components/AppInstallButton";
 
 interface EnginHafizaAppProps {
   initialPublications: Publication[];
@@ -210,6 +211,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
 
   return (
     <div className="app-shell">
+      <AppInstallButton />
       <Sparkles />
       <header className="app-header">
         {step !== "language" && (
