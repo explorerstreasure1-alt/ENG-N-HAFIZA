@@ -71,16 +71,19 @@ export async function deletePublication(id: string): Promise<void> {
   const current = await readMetadata();
   const item = current.find((p) => p.id === id);
   const next = current.filter((p) => p.id !== id);
-  await writeMetadata(next);
+  try {
+    await writeMetadata(next);
+  } catch {
+    // Metadata yazılamazsa (ör. blob token yok) yine de silmeye devam et
+  }
   if (item) {
     try {
-      // Blob URL'den pathname'i çıkar (tam URL olabilir)
       const imageUrl = item.imageUrl;
       let pathname: string | undefined;
       if (imageUrl && imageUrl.startsWith("http")) {
         try {
           const u = new URL(imageUrl);
-          pathname = u.pathname; // /engin-hafiza/img-xxx.jpg
+          pathname = u.pathname.replace(/^\//, ""); // /engin-hafiza/... -> engin-hafiza/...
         } catch {}
       } else {
         pathname = imageUrl;
