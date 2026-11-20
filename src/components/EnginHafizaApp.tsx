@@ -319,92 +319,54 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                   <button type="button" className="btn-outline" onClick={() => { tap(); setStep("language"); }} style={{ marginTop: 12 }}>(Başa dön)</button>
                 </div>
               ) : (
-                <>
-                  <div className="carousel-wrap">
-                    <div className="carousel-3d" role="list" aria-label="Kelime kartları">
-                      {filteredCards.map((item, index) => {
-                        const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
-                        const topic = topicMap.get(item.topicId);
-                        const centerIndex = Math.floor(filteredCards.length / 2);
-                        const offset = index - centerIndex;
-                        let position: "far-left" | "left" | "center" | "right" | "far-right" = "center";
-                        if (offset <= -2) position = "far-left";
-                        else if (offset === -1) position = "left";
-                        else if (offset === 1) position = "right";
-                        else if (offset >= 2) position = "far-right";
-                        const isCenter = position === "center";
-                        return (
-                          <button
-                            type="button"
-                            key={item.id}
-                            className={`card-3d ${position} ${isCenter ? "center" : ""}`}
-                            aria-label={`${language.name} · ${topic?.title ?? "Konu"}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              tap(e.clientX, e.clientY);
-                              if (isCenter) goDetail(item.id);
-                              else {
-                                // brought to center by reordering is complex; just select it
-                                setSelectedCardId(item.id);
-                                setFlipped(false);
-                                setStep("detail");
-                                playSuccess();
-                              }
-                            }}
-                            style={{ zIndex: isCenter ? 40 : 30 - Math.abs(offset) }}
-                          >
-                            <img
-                              className="card-3d__img"
-                              src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
-                              alt={`${language.name} · ${topic?.title ?? "Konu"}`}
-                              loading="lazy"
-                              onError={(event) => {
-                                event.currentTarget.onerror = null;
-                                event.currentTarget.src = DEFAULT_IMAGE;
-                              }}
-                            />
-                            <div className="card-3d__glare" />
-                            <div className="card-3d__info">
-                              <span className="card-3d__icon">{language.icon}</span>
-                              <span className="card-3d__title">{language.name}</span>
-                              <span className="card-3d__sub">{topic?.title ?? "Konu"} · {item.level}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className="card-delete"
-                              onClick={(e) => { e.stopPropagation(); removePublication(item.id); }}
-                              aria-label="Kartı sil"
-                            >
-                              ✕
-                            </button>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="carousel-nav">
-                      {filteredCards.map((_, index) => (
+                <div className="card-list">
+                  {filteredCards.map((item, index) => {
+                    const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
+                    const topic = topicMap.get(item.topicId);
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className="list-card"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          tap();
+                          setSelectedCardId(item.id);
+                          setFlipped(false);
+                          setStep("detail");
+                          playSuccess();
+                        }}
+                        aria-label={`${language.name} · ${topic?.title ?? "Konu"}`}
+                      >
+                        <img
+                          className="list-card__img"
+                          src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
+                          alt={`${language.name} · ${topic?.title ?? "Konu"}`}
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = DEFAULT_IMAGE;
+                          }}
+                        />
+                        <div className="list-card__info">
+                          <div className="list-card__header">
+                            <span className="list-card__icon">{language.icon}</span>
+                            <span className="list-card__title">{language.name}</span>
+                          </div>
+                          <span className="list-card__sub">{topic?.title ?? "Konu"} · {item.level}</span>
+                        </div>
                         <button
                           type="button"
-                          key={index}
-                          className={`dot ${Math.floor(filteredCards.length / 2) === index ? "is-active" : ""}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            tap(e.clientX, e.clientY);
-                            const item = filteredCards[index];
-                            setSelectedCardId(item.id);
-                            setFlipped(false);
-                            setStep("detail");
-                            playSuccess();
-                          }}
-                          aria-label={`${index + 1}. kart`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <p style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "rgba(27,42,74,.45)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
-                    Ortadaki kartı seç · yanlardakilere de dokunabilirsin
-                  </p>
-                </>
+                          className="card-delete"
+                          onClick={(e) => { e.stopPropagation(); removePublication(item.id); }}
+                          aria-label="Kartı sil"
+                        >
+                          ✕
+                        </button>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </section>
           )}
