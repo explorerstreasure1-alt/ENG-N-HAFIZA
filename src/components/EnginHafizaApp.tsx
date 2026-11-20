@@ -58,9 +58,12 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
 
   useEffect(() => {
     const local = loadState(initialPublications);
-    const localIds = new Set(local.publications.map((item) => item.id));
-    const serverOnly = initialPublications.filter((item) => !localIds.has(item.id));
-    setState({ ...local, publications: [...local.publications, ...serverOnly] });
+    // localStorage'de veri varsa (kullanıcı silme/ekleme yaptıysa) onunla ilerle,
+    // server verisini birleştirme (silinenler geri gelmesin).
+    setState({
+      ...local,
+      publications: local.publications.length > 0 ? local.publications : initialPublications,
+    });
     setHydrated(true);
   }, [initialPublications]);
 
