@@ -10,7 +10,7 @@ function asLevel(value: string): Level {
 
 async function readMetadata(): Promise<Publication[]> {
   try {
-    const result = await get(METADATA_PATH, { access: "public" });
+    const result = await get(METADATA_PATH, { access: "private" });
     if (!result || result.statusCode !== 200 || !result.stream) {
       return [...DEMO_PUBLICATIONS];
     }
@@ -27,7 +27,7 @@ async function readMetadata(): Promise<Publication[]> {
 
 async function writeMetadata(publications: Publication[]): Promise<void> {
   await put(METADATA_PATH, JSON.stringify(publications, null, 2), {
-    access: "public",
+    access: "private",
     cacheControlMaxAge: 60,
     contentType: "application/json",
   });
