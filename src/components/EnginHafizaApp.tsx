@@ -120,9 +120,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     playSuccess();
   };
 
-  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
+  const processFile = async (file: File) => {
     if (!file) return;
     setBusy(true);
     try {
@@ -147,9 +145,38 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
       notify(error instanceof Error ? error.message : "Görsel yüklenemedi.");
     } finally {
       setBusy(false);
-      input.value = "";
     }
   };
+
+  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    await processFile(file);
+    input.value = "";
+  };
+
+  const handlePaste = async (event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type && items[i].type.startsWith("image/")) {
+        const file = items[i].getAsFile();
+        if (file) {
+          await processFile(file);
+          event.preventDefault();
+          return;
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("paste", handlePaste);
+    return () => {
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [handlePaste]);
 
   const publish = async () => {
     if (!draftImage || publishing) return;
@@ -534,6 +561,11 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             disabled={busy || publishing}
           />
           {fileName && <div className="file-name">Seçildi: {fileName}</div>}
+          {!draftImage && (
+            <div style={{ fontSize: 10, color: "rgba(27,42,74,.45)", marginTop: 4, textAlign: "center" }}>
+              📋 Görseli kopyalayıp <strong>Ctrl + V</strong> ile yapıştırabilirsin
+            </div>
+          )}
         </div>
         <div className="selection-summary">
           <span>{selectedLanguage.icon}</span>
