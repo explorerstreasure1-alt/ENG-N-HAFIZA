@@ -369,6 +369,14 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                               <span className="card-3d__title">{language.name}</span>
                               <span className="card-3d__sub">{topic?.title ?? "Konu"} · {item.level}</span>
                             </div>
+                            <button
+                              type="button"
+                              className="card-delete"
+                              onClick={(e) => { e.stopPropagation(); removePublication(item.id); }}
+                              aria-label="Kartı sil"
+                            >
+                              ✕
+                            </button>
                           </button>
                         );
                       })}
