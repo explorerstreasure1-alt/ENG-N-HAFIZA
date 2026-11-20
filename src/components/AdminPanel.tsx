@@ -9,7 +9,7 @@ import {
   type LocalState,
 } from "@/lib/client-utils";
 import { LANGUAGE_SEEDS, TOPICS } from "@/lib/seed";
-import { LEVELS, DEFAULT_IMAGE, type Publication, toViewableUrl } from "@/lib/types";
+import { LEVELS, DEFAULT_IMAGE, type Publication } from "@/lib/types";
 
 interface AdminPanelProps {
   initialPublications: Publication[];
@@ -254,7 +254,7 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
             onClick={() => document.getElementById("admin-image-file")?.click()}
           >
             {draftImage ? (
-              <img src={toViewableUrl(draftImage)} alt="Önizleme" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }} />
+              <img src={draftImage} alt="Önizleme" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }} />
             ) : (
               <div style={{ textAlign: "center", color: "rgba(27,42,74,.6)" }}>
                 <div style={{ fontSize: 32, marginBottom: 6 }}>📷</div>
@@ -315,7 +315,7 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
                 >
                   <div style={{ position: "relative", aspectRatio: "1 / 1", background: "#fbfaf8" }}>
                     <img
-                      src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
+                      src={item.imageUrl || DEFAULT_IMAGE}
                       alt={language.name}
                       style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                     />

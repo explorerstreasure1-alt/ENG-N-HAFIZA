@@ -9,7 +9,7 @@ import {
   type LocalState,
 } from "@/lib/client-utils";
 import { LANGUAGE_SEEDS, TOPICS } from "@/lib/seed";
-import { DEFAULT_IMAGE, type Publication, toViewableUrl } from "@/lib/types";
+import { DEFAULT_IMAGE, type Publication } from "@/lib/types";
 import { playClick, playPop, playSuccess, initSound } from "@/lib/sound";
 import Sparkles, { emitSparkleBurst, onSparkleBurst } from "@/components/Sparkles";
 import AppInstallButton from "@/components/AppInstallButton";
@@ -355,7 +355,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                           >
                             <img
                               className="card-3d__img"
-                              src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
+                              src={item.imageUrl || DEFAULT_IMAGE}
                               alt={`${language.name} · ${topic?.title ?? "Konu"}`}
                               loading="lazy"
                               onError={(event) => {
@@ -418,7 +418,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                         <button type="button" className="flip-close" onClick={(e) => { e.stopPropagation(); setStep("cards"); playClick(); }} aria-label="Kapat">✕</button>
                         <img
                           className="flip-img"
-                          src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
+                          src={item.imageUrl || DEFAULT_IMAGE}
                           alt={item.languageId}
                           loading="lazy"
                           onError={(event) => {
@@ -513,7 +513,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
           <label className={`upload-zone ${draftImage ? "has-image" : ""}`} htmlFor="image-file">
             {draftImage ? (
               <>
-                <img src={toViewableUrl(draftImage)} alt="Yayınlanacak görsel önizlemesi" />
+                <img src={draftImage} alt="Yayınlanacak görsel önizlemesi" />
                 <span className="upload-overlay">Değiştir</span>
               </>
             ) : (

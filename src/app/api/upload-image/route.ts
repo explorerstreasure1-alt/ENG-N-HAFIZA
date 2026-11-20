@@ -31,16 +31,12 @@ export async function POST(request: Request): Promise<Response> {
     // Dosya adındaki özel karakterleri temizle (blob path sorunlarını önler)
     const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-    const blob = await put(
-      `engin-hafiza/${makeId("img")}-${safeFileName}`,
-      file,
-      {
-        access: "private",
-        cacheControlMaxAge: 31536000,
-        contentType: file.type,
-        addRandomSuffix: true,
-      }
-    );
+    const blob = await put(`engin-hafiza/${makeId("img")}-${safeFileName}`, file, {
+      access: "public",
+      cacheControlMaxAge: 31536000,
+      contentType: file.type,
+      addRandomSuffix: true,
+    });
 
     return Response.json({ ok: true, url: blob.url, pathname: blob.pathname });
   } catch (error: any) {
