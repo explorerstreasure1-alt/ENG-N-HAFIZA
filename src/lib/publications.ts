@@ -12,6 +12,7 @@ async function readMetadata(): Promise<Publication[]> {
   try {
     const result = await get(METADATA_PATH, { access: "private" });
     if (!result || result.statusCode !== 200 || !result.stream) {
+      console.warn("Engin Hafıza: metadata bulunamadı (404), demo kullanılıyor");
       return [...DEMO_PUBLICATIONS];
     }
     const text = await new Response(result.stream as unknown as BodyInit).text();
@@ -20,15 +21,17 @@ async function readMetadata(): Promise<Publication[]> {
       ...item,
       level: asLevel(item.level),
     }));
-  } catch {
+  } catch (err) {
+    console.error("Engin Hafıza: metadata okuma hatası:", err);
     return [...DEMO_PUBLICATIONS];
   }
 }
 
 async function writeMetadata(publications: Publication[]): Promise<void> {
+  // FIX #3: Metadata cache'i tamamen kapat (0 saniye) ki cross-device anında görünsün
   await put(METADATA_PATH, JSON.stringify(publications, null, 2), {
     access: "private",
-    cacheControlMaxAge: 60,
+    cacheControlMaxAge: 0,
     contentType: "application/json",
   });
 }

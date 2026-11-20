@@ -84,6 +84,17 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     };
   }, []);
 
+  // FIX #6: Sekmeye geri dönüldüğünde (mobil↔PC geçiş) sunucudan otomatik yenile
+  useEffect(() => {
+    const onFocus = () => {
+      if (hydrated && !busy && !publishing) {
+        syncFromServer();
+      }
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [hydrated, busy, publishing, syncFromServer]);
+
   const tap = (x?: number, y?: number) => {
     if (!soundReady.current) return;
     playClick();
@@ -233,6 +244,26 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     playClick();
   };
 
+  // FIX #5: Sunucudan (Vercel Blob metadata) zorla yenile — cross-device anında senkron
+  const syncFromServer = useCallback(async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/publications", { cache: "no-store" });
+      if (res.ok) {
+        const serverPubs = (await res.json()) as Publication[];
+        setState((prev) => ({ ...prev, publications: serverPubs }));
+        notify("Sunucudan güncellendi ✓");
+        playSuccess();
+      } else {
+        notify("Senklenemedi");
+      }
+    } catch {
+      notify("Senklenemedi");
+    } finally {
+      setBusy(false);
+    }
+  }, [notify]);
+
   const filteredCards = state.publications.filter(
     (item) => item.languageId === state.languageId && item.topicId === state.topicId,
   );
@@ -255,7 +286,20 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
           <span className="brand-mark">EH</span>
           <span className="brand-text"><strong>ENGIN HAFIZA</strong><small>TATLI 3D KART AKIŞI</small></span>
         </div>
-        <span className="header-count">{state.publications.length} yayın</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="header-count">{state.publications.length} yayın</span>
+          <button
+            type="button"
+            className="btn-cute"
+            style={{ padding: "6px 10px", fontSize: 11, height: 28 }}
+            onClick={syncFromServer}
+            disabled={busy}
+            aria-label="Sunucudan yenile"
+            title="Diğer cihazlardan eklenenleri getir"
+          >
+            ⟳ Senkron
+          </button>
+        </div>
       </header>
 
       <main className="app-main">

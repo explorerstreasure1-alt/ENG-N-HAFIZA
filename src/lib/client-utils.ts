@@ -2,7 +2,9 @@ import { STORAGE_KEY, type Publication } from "./types";
 import { del, put, list } from "@vercel/blob";
 
 export interface LocalState {
-  publications: Publication[];
+  // FIX #4: publications artık localStorage'de TUTULMAZ (cross-device senkron için).
+  // Sadece UI tercihleri (dil/konu) localStorage'da kalır.
+  publications?: Publication[]; // optional, hydration'da override edilir
   languageId: string;
   topicId: string;
 }
@@ -30,7 +32,10 @@ export function loadState(fallbackPublications: Publication[]): LocalState {
 
 export function persistState(state: LocalState) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // FIX #4: publications KAYDETME — sunucu kaynağı tek doğru kaynaktır.
+  // Sadece dil/konu tercihini sakla.
+  const { publications, ...uiPrefs } = state;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(uiPrefs));
 }
 
 export function makeId(prefix: string) {
