@@ -145,6 +145,8 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 160 }}>
           <label style={{ fontSize: 12, fontWeight: 700, color: "rgba(27, 42, 74, 0.7)" }}>Dil filtresi</label>
           <select
+            id="admin-filter-language"
+            name="filter-language"
             value={filterLanguage}
             onChange={(e) => setFilterLanguage(e.target.value)}
             style={{ padding: 8, borderRadius: 8, border: "1px solid rgba(27,42,74,.13)", background: "#fff" }}
@@ -158,6 +160,8 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 160 }}>
           <label style={{ fontSize: 12, fontWeight: 700, color: "rgba(27, 42, 74, 0.7)" }}>Konu filtresi</label>
           <select
+            id="admin-filter-topic"
+            name="filter-topic"
             value={filterTopic}
             onChange={(e) => setFilterTopic(e.target.value)}
             style={{ padding: 8, borderRadius: 8, border: "1px solid rgba(27,42,74,.13)", background: "#fff" }}
@@ -208,6 +212,8 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 12, fontWeight: 700, color: "rgba(27,42,74,.7)" }}>Dil</label>
             <select
+              id="admin-language-select"
+              name="language"
               value={state.languageId}
               onChange={(e) => setState((prev) => ({ ...prev, languageId: e.target.value }))}
               style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(27,42,74,.13)", background: "#fbfaf8" }}
@@ -220,6 +226,8 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 12, fontWeight: 700, color: "rgba(27,42,74,.7)" }}>Konu</label>
             <select
+              id="admin-topic-select"
+              name="topic"
               value={state.topicId}
               onChange={(e) => setState((prev) => ({ ...prev, topicId: e.target.value }))}
               style={{ padding: 10, borderRadius: 10, border: "1px solid rgba(27,42,74,.13)", background: "#fbfaf8" }}

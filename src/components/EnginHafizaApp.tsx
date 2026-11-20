@@ -474,6 +474,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             <span className="select-code">{selectedLanguage.icon}</span>
             <select
               aria-label="Dil seç"
+              id="language-select"
+              name="language"
               value={state.languageId}
               onChange={(event) => setState((previous) => ({ ...previous, languageId: event.target.value }))}
             >
@@ -492,6 +494,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             <span className="select-code is-level">{selectedTopic.level}</span>
             <select
               aria-label="Konu seç"
+              id="topic-select"
+              name="topic"
               value={state.topicId}
               onChange={(event) => setState((previous) => ({ ...previous, topicId: event.target.value }))}
             >
