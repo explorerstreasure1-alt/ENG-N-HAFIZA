@@ -2,9 +2,9 @@ import { STORAGE_KEY, type Publication } from "./types";
 import { del, put, list } from "@vercel/blob";
 
 export interface LocalState {
-  // FIX #4: publications artık localStorage'de TUTULMAZ (cross-device senkron için).
-  // Sadece UI tercihleri (dil/konu) localStorage'da kalır.
-  publications?: Publication[]; // optional, hydration'da override edilir
+  // FIX #4: publications tipi required kalsın (components break olmasın),
+  // sadece persistState'e yazmasın (sunucu tek doğru kaynak).
+  publications: Publication[];
   languageId: string;
   topicId: string;
 }

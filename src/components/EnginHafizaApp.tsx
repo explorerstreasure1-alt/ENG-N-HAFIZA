@@ -84,6 +84,27 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     };
   }, []);
 
+  // FIX #5: Sunucudan (Vercel Blob metadata) zorla yenile — cross-device anında senkron
+  // Tanımı useEffect'ten ÖNCE yapmalıyız (hoisting sorunu).
+  const syncFromServer = useCallback(async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/publications", { cache: "no-store" });
+      if (res.ok) {
+        const serverPubs = (await res.json()) as Publication[];
+        setState((prev) => ({ ...prev, publications: serverPubs }));
+        notify("Sunucudan güncellendi ✓");
+        playSuccess();
+      } else {
+        notify("Senklenemedi");
+      }
+    } catch {
+      notify("Senklenemedi");
+    } finally {
+      setBusy(false);
+    }
+  }, [notify]);
+
   // FIX #6: Sekmeye geri dönüldüğünde (mobil↔PC geçiş) sunucudan otomatik yenile
   useEffect(() => {
     const onFocus = () => {
@@ -203,7 +224,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
       createdAt: new Date().toISOString(),
     };
     setPublishing(true);
-    setState((previous) => ({ ...previous, publications: [item, ...previous.publications] }));
+    setState((previous) => ({ ...previous, publications: [item, ...(previous.publications || [])] }));
     setDraftImage(null);
     setFileName("");
     try {
@@ -217,7 +238,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
         const saved = data.publication;
         setState((previous) => ({
           ...previous,
-          publications: previous.publications.map((entry) => (entry.id === item.id ? saved : entry)),
+          publications: (previous.publications || []).map((entry) => (entry.id === item.id ? saved : entry)),
         }));
         notify("Yayın ana sayfaya eklendi.");
         playSuccess();
@@ -236,7 +257,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     // Yerel state'i hemen güncelle (localStorage'e persistState ile yazılır)
     setState((previous) => ({
       ...previous,
-      publications: previous.publications.filter((item) => item.id !== id),
+      publications: (previous.publications || []).filter((item) => item.id !== id),
     }));
     // Sunucuya silmeyi deney (best effort, beklemeden devam et)
     fetch(`/api/publications?id=${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => undefined);
@@ -244,27 +265,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     playClick();
   };
 
-  // FIX #5: Sunucudan (Vercel Blob metadata) zorla yenile — cross-device anında senkron
-  const syncFromServer = useCallback(async () => {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/publications", { cache: "no-store" });
-      if (res.ok) {
-        const serverPubs = (await res.json()) as Publication[];
-        setState((prev) => ({ ...prev, publications: serverPubs }));
-        notify("Sunucudan güncellendi ✓");
-        playSuccess();
-      } else {
-        notify("Senklenemedi");
-      }
-    } catch {
-      notify("Senklenemedi");
-    } finally {
-      setBusy(false);
-    }
-  }, [notify]);
-
-  const filteredCards = state.publications.filter(
+  const filteredCards = (state.publications || []).filter(
     (item) => item.languageId === state.languageId && item.topicId === state.topicId,
   );
 
@@ -287,7 +288,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
           <span className="brand-text"><strong>ENGIN HAFIZA</strong><small>TATLI 3D KART AKIŞI</small></span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="header-count">{state.publications.length} yayın</span>
+          <span className="header-count">{(state.publications || []).length} yayın</span>
           <button
             type="button"
             className="btn-cute"

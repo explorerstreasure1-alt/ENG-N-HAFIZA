@@ -45,7 +45,7 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
   };
 
   const filtered = useMemo(() => {
-    return state.publications.filter((item) => {
+    return (state.publications || []).filter((item) => {
       if (filterLanguage && item.languageId !== filterLanguage) return false;
       if (filterTopic && item.topicId !== filterTopic) return false;
       return true;
@@ -100,7 +100,7 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
       });
       const data = await res.json();
       if (res.ok && data.ok && data.publication) {
-        setState((previous) => ({ ...previous, publications: [data.publication, ...previous.publications] }));
+        setState((previous) => ({ ...previous, publications: [data.publication, ...(previous.publications || [])] }));
         setDraftImage(null);
         setFileName("");
         notify("Yayın eklendi.");
@@ -116,7 +116,7 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
     if (!window.confirm("Bu yayını silmek istediğinizden emin misiniz?")) return;
     setState((previous) => ({
       ...previous,
-      publications: previous.publications.filter((item) => item.id !== id),
+      publications: (previous.publications || []).filter((item) => item.id !== id),
     }));
     try {
       await fetch(`/api/publications?id=${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -128,7 +128,7 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
 
   const totalByLanguage = useMemo(() => {
     const counts: Record<string, number> = {};
-    state.publications.forEach((item) => {
+    (state.publications || []).forEach((item) => {
       counts[item.languageId] = (counts[item.languageId] || 0) + 1;
     });
     return counts;
