@@ -35,7 +35,7 @@ export async function POST(request: Request): Promise<Response> {
       `engin-hafiza/${makeId("img")}-${safeFileName}`,
       file,
       {
-        access: "public",
+        access: "private",
         cacheControlMaxAge: 31536000,
         contentType: file.type,
         addRandomSuffix: true,
