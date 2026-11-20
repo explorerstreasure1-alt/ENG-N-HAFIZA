@@ -58,11 +58,13 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
 
   useEffect(() => {
     const local = loadState(initialPublications);
-    // localStorage'de veri varsa (kullanıcı silme/ekleme yaptıysa) onunla ilerle,
-    // server verisini birleştirme (silinenler geri gelmesin).
+    // FIX #1: Yayın listesi tek bir, tüm cihazlarda paylaşılan kaynaktan gelir.
+    // localStorage cihaza/taraycıya özeldir (mobil yükleme PC'de, PC yükleme mobilde görünmez).
+    // Bu yüzden localStorage'deki yayın listesi asla sunucu verisini (initialPublications) override etmez.
+    // Yalnızca arayüz tercihleri (dil/konu) localStorage'dan okunur, yayın listesi sunucuya göre ayarlanır.
     setState({
       ...local,
-      publications: local.publications.length > 0 ? local.publications : initialPublications,
+      publications: initialPublications,
     });
     setHydrated(true);
   }, [initialPublications]);
