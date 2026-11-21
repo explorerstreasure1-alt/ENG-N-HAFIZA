@@ -418,12 +418,20 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                         <img
                           className="image-cell__img"
                           src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
+                          data-original-src={item.imageUrl || ""}
                           alt={`Görsel ${index + 1}`}
                           loading="eager"
                           decoding="async"
                           onError={(event) => {
-                            event.currentTarget.onerror = null;
-                            event.currentTarget.src = DEFAULT_IMAGE;
+                            const img = event.currentTarget;
+                            const original = img.getAttribute("data-original-src");
+                            if (original && img.src !== original) {
+                              img.onerror = null;
+                              img.src = original;
+                              return;
+                            }
+                            img.onerror = null;
+                            img.src = DEFAULT_IMAGE;
                           }}
                         />
                         <button
@@ -495,12 +503,20 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                         <img
                           className="detail-card__img"
                           src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
+                          data-original-src={item.imageUrl || ""}
                           alt={`${language.name} · ${topic?.title ?? "Konu"}`}
                           loading="eager"
                           decoding="async"
                           onError={(event) => {
-                            event.currentTarget.onerror = null;
-                            event.currentTarget.src = DEFAULT_IMAGE;
+                            const img = event.currentTarget;
+                            const original = img.getAttribute("data-original-src");
+                            if (original && img.src !== original) {
+                              img.onerror = null;
+                              img.src = original;
+                              return;
+                            }
+                            img.onerror = null;
+                            img.src = DEFAULT_IMAGE;
                           }}
                         />
                         <div className="detail-card__glare" />
@@ -590,7 +606,22 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
           <label className={`upload-zone ${draftImage ? "has-image" : ""}`} htmlFor="image-file">
             {draftImage ? (
               <>
-                <img src={toViewableUrl(draftImage)} alt="Yayınlanacak görsel önizlemesi" />
+                <img
+                  src={toViewableUrl(draftImage)}
+                  data-original-src={draftImage}
+                  alt="Yayınlanacak görsel önizlemesi"
+                  onError={(event) => {
+                    const img = event.currentTarget;
+                    const original = img.getAttribute("data-original-src");
+                    if (original && img.src !== original) {
+                      img.onerror = null;
+                      img.src = original;
+                      return;
+                    }
+                    img.onerror = null;
+                    img.src = DEFAULT_IMAGE;
+                  }}
+                />
                 <span className="upload-overlay">Değiştir</span>
               </>
             ) : (

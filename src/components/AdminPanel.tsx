@@ -254,7 +254,23 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
             onClick={() => document.getElementById("admin-image-file")?.click()}
           >
             {draftImage ? (
-              <img src={toViewableUrl(draftImage)} alt="Önizleme" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }} />
+              <img
+                src={toViewableUrl(draftImage)}
+                data-original-src={draftImage}
+                alt="Önizleme"
+                style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 12 }}
+                onError={(event) => {
+                  const img = event.currentTarget;
+                  const original = img.getAttribute("data-original-src");
+                  if (original && img.src !== original) {
+                    img.onerror = null;
+                    img.src = original;
+                    return;
+                  }
+                  img.onerror = null;
+                  img.src = DEFAULT_IMAGE;
+                }}
+              />
             ) : (
               <div style={{ textAlign: "center", color: "rgba(27,42,74,.6)" }}>
                 <div style={{ fontSize: 32, marginBottom: 6 }}>📷</div>
@@ -316,8 +332,20 @@ export default function AdminPanel({ initialPublications }: AdminPanelProps) {
                   <div style={{ position: "relative", aspectRatio: "1 / 1", background: "#fbfaf8" }}>
                     <img
                       src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
+                      data-original-src={item.imageUrl || ""}
                       alt={language.name}
                       style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      onError={(event) => {
+                        const img = event.currentTarget;
+                        const original = img.getAttribute("data-original-src");
+                        if (original && img.src !== original) {
+                          img.onerror = null;
+                          img.src = original;
+                          return;
+                        }
+                        img.onerror = null;
+                        img.src = DEFAULT_IMAGE;
+                      }}
                     />
                     <div style={{ position: "absolute", top: 6, left: 6, background: "rgba(27,42,74,.85)", color: "#fff", padding: "2px 7px", borderRadius: 6, fontSize: 10, fontWeight: 800 }}>
                       {language.icon}
