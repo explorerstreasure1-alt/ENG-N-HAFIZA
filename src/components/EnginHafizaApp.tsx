@@ -209,6 +209,34 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     }
   };
 
+  // FIX #14: Mobilde panodaki görseli tek dokunuşla yapıştır.
+  // Telefonda Ctrl+V olmadığı için "Yapıştır" butonu bu fonksiyonu çağırır.
+  const pasteFromClipboard = async () => {
+    if (busy || publishing) return;
+    const clipboard = navigator.clipboard as
+      | (Clipboard & { read?: () => Promise<ClipboardItem[]> })
+      | undefined;
+    if (!clipboard || typeof clipboard.read !== "function") {
+      notify("Tarayıcı pano görselini okumayı desteklemiyor. Görseli seçerek yükle.");
+      return;
+    }
+    try {
+      const items = await clipboard.read();
+      for (const item of items) {
+        const imageType = item.types.find((type) => type.startsWith("image/"));
+        if (!imageType) continue;
+        const blob = await item.getType(imageType);
+        const ext = imageType.split("/")[1]?.split("+")[0] || "png";
+        const file = new File([blob], `pano-${Date.now()}.${ext}`, { type: imageType });
+        await processFile(file);
+        return;
+      }
+      notify("Panoda görsel bulunamadı. Önce bir görseli kopyala.");
+    } catch {
+      notify("Panoya erişilemedi. İzin ver veya görseli seçerek yükle.");
+    }
+  };
+
   useEffect(() => {
     document.addEventListener("paste", handlePaste);
     return () => {
@@ -654,6 +682,31 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             <span className="step-number">03</span>
             <span><strong>Görsel yükle</strong><small>Fotoğraf veya galeri</small></span>
           </div>
+          {/* FIX #14: Mobilde panodaki görseli tek dokunuşla yapıştır */}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <button
+              type="button"
+              onClick={pasteFromClipboard}
+              disabled={busy || publishing}
+              aria-label="Panodaki görseli yapıştır"
+              title="Panodaki görseli yapıştır"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(139,0,0,.35)",
+                background: "rgba(139,0,0,.06)",
+                color: "#8b0000",
+                fontWeight: 800,
+                fontSize: 12,
+                cursor: busy || publishing ? "not-allowed" : "pointer",
+              }}
+            >
+              📋 Yapıştır
+            </button>
+          </div>
           <label className={`upload-zone ${draftImage ? "has-image" : ""}`} htmlFor="image-file">
             {draftImage ? (
               <>
@@ -694,7 +747,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
           {fileName && <div className="file-name">Seçildi: {fileName}</div>}
           {!draftImage && (
             <div style={{ fontSize: 10, color: "rgba(27,42,74,.45)", marginTop: 4, textAlign: "center" }}>
-              📋 Görseli kopyalayıp <strong>Ctrl + V</strong> ile yapıştırabilirsin
+              📋 Görseli kopyalayıp <strong>Yapıştır</strong>&apos;a dokun (PC&apos;de Ctrl + V)
             </div>
           )}
         </div>
