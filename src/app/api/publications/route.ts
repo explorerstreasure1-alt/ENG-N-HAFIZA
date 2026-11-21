@@ -38,10 +38,12 @@ export async function POST(request: Request) {
       imageUrl: body.imageUrl,
       createdAt: body.createdAt,
     });
+    console.log("Engin Hafıza: publication created:", publication.id);
     return Response.json({ ok: true, publication });
   } catch (error) {
     console.error("Engin Hafıza: yayın sunucuya kaydedilemedi.", error);
-    return Response.json({ ok: false, error: "Sunucuya kaydedilemedi" }, { status: 200 });
+    // FIX #7: Hata durumunda 500 dön (200 dönmemeli) ki client fallback yapmasın
+    return Response.json({ ok: false, error: "Sunucuya kaydedilemedi" }, { status: 500 });
   }
 }
 
@@ -50,8 +52,10 @@ export async function DELETE(request: Request) {
   if (!id) return Response.json({ ok: false }, { status: 400 });
   try {
     await deletePublication(id);
+    console.log("Engin Hafıza: publication deleted:", id);
     return Response.json({ ok: true });
-  } catch {
-    return Response.json({ ok: false }, { status: 200 });
+  } catch (error) {
+    console.error("Engin Hafıza: publication silinemedi:", id, error);
+    return Response.json({ ok: false }, { status: 500 });
   }
 }

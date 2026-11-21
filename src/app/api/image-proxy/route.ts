@@ -13,6 +13,7 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const blob = await get(path, { access: "public" });
     if (!blob || !blob.stream) {
+      console.warn("Engin Hafıza: image-proxy blob not found:", path);
       return new Response("Not found", { status: 404 });
     }
     const contentType = blob.headers?.get("content-type") || "application/octet-stream";
@@ -21,10 +22,22 @@ export async function GET(request: Request): Promise<Response> {
         "content-type": contentType,
         "cache-control": "public, max-age=31536000, immutable",
         "access-control-allow-origin": "*",
+        "access-control-allow-methods": "GET, HEAD, OPTIONS",
+        "access-control-allow-headers": "Range",
       },
     });
   } catch (error) {
-    console.error("Engin Hafıza: image-proxy hata:", error);
+    console.error("Engin Hafıza: image-proxy hata:", path, error);
     return new Response("Proxy error", { status: 500 });
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    headers: {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET, HEAD, OPTIONS",
+      "access-control-allow-headers": "Range",
+    },
+  });
 }
