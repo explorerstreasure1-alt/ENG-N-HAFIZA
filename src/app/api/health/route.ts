@@ -16,9 +16,9 @@ export async function GET(): Promise<Response> {
       : null,
   };
 
-  // 1) Okuma testi
+  // 1) Okuma testi (store PUBLIC)
   try {
-    const meta = await get("engin-hafiza/publications.json", { access: "private" });
+    const meta = await get("engin-hafiza/publications.json", { access: "public" });
     result.read = meta
       ? { status: meta.statusCode, hasStream: Boolean(meta.stream) }
       : { status: "null" };
@@ -30,7 +30,7 @@ export async function GET(): Promise<Response> {
   const testPath = `engin-hafiza/__health_${Date.now()}.json`;
   try {
     const written = await put(testPath, JSON.stringify({ ok: true, at: Date.now() }), {
-      access: "private",
+      access: "public",
       allowOverwrite: true,
       cacheControlMaxAge: 60,
       contentType: "application/json",

@@ -36,13 +36,8 @@ export const STORAGE_KEY = "engin-hafiza-simple-v2";
  */
 export function toViewableUrl(imageUrl: string): string {
   if (!imageUrl || imageUrl.startsWith("data:") || imageUrl.startsWith("/")) return imageUrl;
-  try {
-    const u = new URL(imageUrl);
-    const pathname = u.pathname.replace(/^\//, "");
-    if (pathname) {
-      return `/api/image-proxy?path=${encodeURIComponent(pathname)}`;
-    }
-  } catch {}
+  // FIX #12: Store PUBLIC olduğu için görsel URL'leri doğrudan erişilebilir.
+  // Proxy'ye yönlendirmek gereksizdi ve 500 hatası veriyordu; doğrudan döndür.
   return imageUrl;
 }
 

@@ -10,7 +10,10 @@ function asLevel(value: string): Level {
 
 async function readMetadata(): Promise<Publication[]> {
   try {
-    const result = await get(METADATA_PATH, { access: "private" });
+    // FIX #11 (KRİTİK): Store PUBLIC olarak yapılandırılmış.
+    // private access public store'da yasak ("Cannot use private access on a public store").
+    // Bu yüzden metadata okuma public olmalı, yoksa hep demo listesine düşüyordu.
+    const result = await get(METADATA_PATH, { access: "public" });
     if (!result || result.statusCode !== 200 || !result.stream) {
       console.warn("Engin Hafıza: metadata bulunamadı (404), demo kullanılıyor");
       return [...DEMO_PUBLICATIONS];
@@ -34,8 +37,9 @@ async function writeMetadata(publications: Publication[]): Promise<void> {
   // bu yüzden cihazlar arası senkron çalışmıyordu.
   // FIX #9: cacheControlMaxAge: 0 API tarafından reddedilebiliyordu (500);
   // güvenli değer kullan. Metadata zaten no-store ile okunuyor.
+  // FIX #11 (KRİTİK): Store PUBLIC — private access yasak, public kullan.
   await put(METADATA_PATH, JSON.stringify(publications, null, 2), {
-    access: "private",
+    access: "public",
     allowOverwrite: true,
     cacheControlMaxAge: 60,
     contentType: "application/json",
