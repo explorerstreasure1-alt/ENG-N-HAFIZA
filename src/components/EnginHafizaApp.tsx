@@ -44,6 +44,10 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
   const [flipped, setFlipped] = useState(false);
   const toastTimer = useRef<number | null>(null);
   const soundReady = useRef(false);
+  // FIX #13: Mobilde parmakla kaydırma (swipe) için dokunma başlangıcı ve
+  // kaydırma sonrası tıklamayı bastırma bayrağı.
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressClickRef = useRef(false);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -273,6 +277,40 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     (item) => item.languageId === state.languageId && item.topicId === state.topicId,
   );
 
+  // FIX #13: Seçili karttan ±1 yönde geçiş yap (swipe ve ok butonları için ortak)
+  const goToCardOffset = (dir: -1 | 1) => {
+    const currentIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
+    if (currentIndex === -1) return;
+    const nextIndex = currentIndex + dir;
+    if (nextIndex < 0 || nextIndex >= filteredCards.length) return;
+    setSelectedCardId(filteredCards[nextIndex].id);
+    playClick();
+  };
+
+  // FIX #13: Dokunma başlangıcını kaydet
+  const handleCarouselTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+    suppressClickRef.current = false;
+  };
+
+  // FIX #13: Parmak kalkınca yatay kaydırmayı ölç ve karta geç
+  const handleCarouselTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    // Yatay hareket yeterince büyükse ve dikey kaydırmadan baskınsa: swipe say
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      suppressClickRef.current = true;
+      window.setTimeout(() => { suppressClickRef.current = false; }, 60);
+      if (dx < 0) goToCardOffset(1);   // sola kaydır → sonraki kart
+      else goToCardOffset(-1);         // sağa kaydır → önceki kart
+    }
+  };
+
   const back = () => {
     if (step === "detail") { setStep("cards"); playClick(); return; }
     if (step === "cards") { setStep("topic"); playClick(); return; }
@@ -478,7 +516,14 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                 </div>
               </div>
               <div className="detail-3d-wrap">
-                <div className="detail-3d-carousel" role="list" aria-label="3D kart detayı">
+                <div
+                  className="detail-3d-carousel"
+                  role="list"
+                  aria-label="3D kart detayı"
+                  onTouchStart={handleCarouselTouchStart}
+                  onTouchEnd={handleCarouselTouchEnd}
+                  style={{ touchAction: "pan-y" }}
+                >
                   {filteredCards.map((item, index) => {
                     const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
                     const topic = topicMap.get(item.topicId);
@@ -497,6 +542,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                         className={`detail-card ${position} ${isCenter ? "center" : ""}`}
                         onClick={(e) => {
                           e.stopPropagation();
+                          // FIX #13: swipe sonrası oluşan tıklamayı yoksay
+                          if (suppressClickRef.current) return;
                           tap();
                           setSelectedCardId(item.id);
                           playSuccess();
