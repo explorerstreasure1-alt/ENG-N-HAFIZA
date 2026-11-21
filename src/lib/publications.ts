@@ -28,9 +28,13 @@ async function readMetadata(): Promise<Publication[]> {
 }
 
 async function writeMetadata(publications: Publication[]): Promise<void> {
-  // FIX #3: Metadata cache'i tamamen kapat (0 saniye) ki cross-device anında görünsün
+  // FIX #8 (KRİTİK): @vercel/blob v2'de allowOverwrite varsayılanı FALSE.
+  // Bu olmadan aynı path'e (publications.json) ikinci ve sonraki yazmalar
+  // 409 "already exists" hatası veriyordu; metadata hiç güncellenmiyordu,
+  // bu yüzden cihazlar arası senkron çalışmıyordu.
   await put(METADATA_PATH, JSON.stringify(publications, null, 2), {
     access: "private",
+    allowOverwrite: true,
     cacheControlMaxAge: 0,
     contentType: "application/json",
   });
