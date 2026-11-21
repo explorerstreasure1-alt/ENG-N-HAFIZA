@@ -32,10 +32,12 @@ async function writeMetadata(publications: Publication[]): Promise<void> {
   // Bu olmadan aynı path'e (publications.json) ikinci ve sonraki yazmalar
   // 409 "already exists" hatası veriyordu; metadata hiç güncellenmiyordu,
   // bu yüzden cihazlar arası senkron çalışmıyordu.
+  // FIX #9: cacheControlMaxAge: 0 API tarafından reddedilebiliyordu (500);
+  // güvenli değer kullan. Metadata zaten no-store ile okunuyor.
   await put(METADATA_PATH, JSON.stringify(publications, null, 2), {
     access: "private",
     allowOverwrite: true,
-    cacheControlMaxAge: 0,
+    cacheControlMaxAge: 60,
     contentType: "application/json",
   });
 }

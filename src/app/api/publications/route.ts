@@ -41,9 +41,14 @@ export async function POST(request: Request) {
     console.log("Engin Hafıza: publication created:", publication.id);
     return Response.json({ ok: true, publication });
   } catch (error) {
-    console.error("Engin Hafıza: yayın sunucuya kaydedilemedi.", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Engin Hafıza: yayın sunucuya kaydedilemedi.", message, error);
     // FIX #7: Hata durumunda 500 dön (200 dönmemeli) ki client fallback yapmasın
-    return Response.json({ ok: false, error: "Sunucuya kaydedilemedi" }, { status: 500 });
+    // FIX #10: gerçek hata mesajını da dön ki client gösterebilsin
+    return Response.json(
+      { ok: false, error: `Sunucuya kaydedilemedi: ${message}` },
+      { status: 500 },
+    );
   }
 }
 

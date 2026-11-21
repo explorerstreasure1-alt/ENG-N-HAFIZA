@@ -233,7 +233,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(item),
       });
-      const data = (await response.json()) as { ok?: boolean; publication?: Publication };
+      const data = (await response.json()) as { ok?: boolean; publication?: Publication; error?: string };
       if (response.ok && data.ok && data.publication) {
         const saved = data.publication;
         setState((previous) => ({
@@ -243,10 +243,14 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
         notify("Yayın ana sayfaya eklendi.");
         playSuccess();
       } else {
-        notify("Cihazda kaydedildi.");
+        // FIX #10: gerçek hata mesajını göster (sessizce yutma)
+        console.error("Engin Hafıza: yayın kaydedilemedi:", data.error);
+        notify(data.error || "Sunucuya kaydedilemedi.");
       }
-    } catch {
-      notify("Cihazda kaydedildi.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Engin Hafıza: yayın isteği başarısız:", message);
+      notify(`Kaydedilemedi: ${message}`);
     } finally {
       setPublishing(false);
     }
