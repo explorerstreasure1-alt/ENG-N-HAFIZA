@@ -751,8 +751,7 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   border: 2px solid rgba(255,255,255,.7);
   background: #fff;
   box-shadow: 0 28px 64px rgba(27,42,74,.14);
-  /* FIX #15: Mobilde 3D dönerken ağır özellikleri animate etme. */
-  transition: transform .55s cubic-bezier(.22,.61,.36,1), opacity .45s ease;
+  transition: all .75s cubic-bezier(.34,1.56,.64,1);
   will-change: transform, opacity;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
@@ -783,23 +782,21 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   .carousel-wrap { min-height: 440px; }
   .carousel-3d { min-height: 376px; }
   .card-3d { width: 280px; height: 380px; }
-  .card-3d__img { height: 100%; }
+  .card-3d__img { height: 100%; object-fit: contain; width: 90%; }
   .detail-3d-wrap { min-height: 440px; }
   .detail-3d-carousel { min-height: 376px; }
   .detail-card { width: 280px; height: 380px; }
-  .detail-card__img { height: 100%; }
+  .detail-card__img { height: 100%; object-fit: contain; width: 90%; }
 }
 .card-3d:not(.center) { opacity: .72; }
 .card-3d__img {
-  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  /* Sadece görsel, orijinal oranda tam sığdır, kenarlarda biraz boşluk */
+  width: 90%; height: 90%; object-fit: contain; object-position: center;
   background: #fbfaf8; display: block;
-  filter: contrast(1.15) saturate(1.25) brightness(1.05);
-  /* FIX #15: Ayrı GPU katmanı → 3D dönerken yeniden rasterize olmasın. */
-  transform: translateZ(0);
+  filter: none;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   pointer-events: none;
-  -webkit-user-drag: none;
 }
 .card-3d__info { display: none; }
 .card-3d__glare {
@@ -1142,91 +1139,16 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   .install-btn { top: 12px; right: 12px; font-size: 11px; padding: 8px 12px; }
 }
 
-/* FIX #16: TELEFON — 3D'yi tamamen kapat, tarayıcının kendi yatay
-   kaydırmasına (native scroll + snap) geç.
-   Neden: mobilde 5 büyük kartı perspective/rotateY/will-change ile aynı anda
-   bestelemek GPU belleğini tüketiyordu; kart geç geliyor, dönerken beyaz
-   (boş) kareler görünüyordu. Native kaydırmayı tarayıcı compositor thread'de
-   yaptığı için parmak 1:1 takip eder, donma/bozulma olmaz.
-   Bu blok dosyanın EN SONUNDA olmalı ki yukarıdaki genel kuralları ezsin. */
+/* Telefon: kartlar biraz küçülsün, sahne kısalsın — 3D görünüm sabit kalır */
 @media (max-width: 620px) {
-  .detail-3d-wrap { padding: 0 0 6px; min-height: 0; }
-
-  .detail-3d-carousel {
-    perspective: none;
-    display: flex;
-    align-items: stretch;
-    justify-content: flex-start;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 4%;
-    padding: 4px 4% 10px;
-    min-height: 0;
-    touch-action: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .detail-3d-carousel::-webkit-scrollbar { display: none; }
-
-  /* Kartlar artık absolute/3D değil: yatay akışta eşit genişlikte */
-  .detail-card,
-  .detail-card.center,
-  .detail-card.left,
-  .detail-card.right,
+  .carousel-wrap { min-height: 440px; }
+  .carousel-3d { min-height: 376px; }
+  .card-3d { width: 280px; height: 380px; }
+  .card-3d__img { height: 100%; object-fit: contain; }
+  .detail-3d-wrap { min-height: 440px; }
+  .detail-3d-carousel { min-height: 376px; }
+  .detail-card { width: 280px; height: 380px; }
+  .detail-card__img { height: 100%; object-fit: contain; }
   .detail-card.far-left,
-  .detail-card.far-right {
-    position: relative;
-    top: auto;
-    left: auto;
-    width: 92%;
-    margin: 0 auto;
-    /* FIX #19: Kart büyük ve 3:4 portre oranında. Yükseklik ekrana göre,
-       ama en fazla svh - 200px (üst+alt boşluk kalır). */
-    aspect-ratio: 3 / 4;
-    height: auto;
-    max-height: clamp(380px, calc(100svh - 200px), 720px);
-    border-radius: 24px;
-    border-width: 2px;
-    transform: none;
-    opacity: 1;
-    z-index: auto !important;
-    scroll-snap-align: center;
-    transition: none;
-    /* GPU'yu boğan ipuçlarını mobilde kapat */
-    will-change: auto;
-    -webkit-backface-visibility: visible;
-    backface-visibility: visible;
-    isolation: auto;
-    box-shadow: 0 12px 28px rgba(27,42,74,.16);
-    contain: layout paint;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 16px;
-    box-sizing: border-box;
-    background:
-      radial-gradient(140% 100% at 50% 0%, #24324f 0%, #131b2f 45%, #0b1020 100%);
-  }
-  /* Sadece ortadaki kartta silme butonu görünsün (yan kartlarda karışıklık) */
-  .detail-card:not(.center) .card-delete { display: none; }
-  .detail-card__img {
-    /* Mobilde filter + translateZ gereksiz yük; kapalı. */
-    filter: none;
-    transform: none;
-    -webkit-backface-visibility: visible;
-    backface-visibility: visible;
-    /* FIX #19: Fotoğraf orijinal 3:4 oranında, tamamı görünsün (kırpma yok).
-       width 88% = kenarlarda boşluk bırakıyor, yazıların sonları kesilmez. */
-    width: 88%;
-    height: auto;
-    max-height: 78%;
-    object-fit: contain;
-    border-radius: 18px;
-    display: block;
-  }
-  .card-3d__img { filter: none; }
+  .detail-card.far-right { opacity: .28; }
 }
