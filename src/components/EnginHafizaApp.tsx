@@ -18,13 +18,6 @@ interface EnginHafizaAppProps {
   initialPublications: Publication[];
 }
 
-// FIX #16: Mobilde native kaydırma kullanılıyor (bkz. globals.css sonundaki
-// media query). Bu genişlikte JS ile 3D sürükleme yapılmaz.
-const MOBILE_QUERY = "(max-width: 620px)";
-function isMobileViewport(): boolean {
-  return typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches;
-}
-
 type Step = "language" | "topic" | "cards" | "detail";
 
 const languageMap = new Map(LANGUAGE_SEEDS.map((item) => [item.id, item]));
@@ -51,15 +44,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
   const [flipped, setFlipped] = useState(false);
   const toastTimer = useRef<number | null>(null);
   const soundReady = useRef(false);
-  // FIX #13: Mobilde parmakla kaydırma (swipe) için dokunma başlangıcı ve
-  // kaydırma sonrası tıklamayı bastırma bayrağı.
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const suppressClickRef = useRef(false);
-  // FIX #15: Sürükleme takibi (drag-follow) için ek ref'ler.
   const carouselRef = useRef<HTMLDivElement | null>(null);
-  const dragActiveRef = useRef(false);
-  const suppressTimerRef = useRef<number | null>(null);
-  // FIX #16: Mobilde native kaydırma kullanılıyor; scroll → seçili kart senkronu.
   const scrollSyncTimerRef = useRef<number | null>(null);
   const programmaticScrollRef = useRef(false);
 
@@ -319,7 +305,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     (item) => item.languageId === state.languageId && item.topicId === state.topicId,
   );
 
-  // FIX #13: Seçili karttan ±1 yönde geçiş yap (swipe ve ok butonları için ortak)
+  // FIX #20: Seçili karttan ±1 yönde geçiş yap (ok butonları için ortak)
   const goToCardOffset = (dir: -1 | 1) => {
     const currentIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
     if (currentIndex === -1) return;
@@ -329,99 +315,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     playClick();
   };
 
-  // FIX #15: Sürükleme eşikleri
-  const DRAG_START_PX = 6; // yatay sürüklemenin başlaması için minimum hareket
-  const SWIPE_PX = 46; // kart değiştirmek için gereken mesafe
-
-  // FIX #15: Sürükleme durumunu sıfırla (kartlar yerine yumuşakça dönsün)
-  const resetCarouselDrag = () => {
-    const node = carouselRef.current;
-    dragActiveRef.current = false;
-    if (!node) return;
-    node.classList.remove("is-dragging");
-    // Geçişin yeniden etkin olduğundan emin olmak için layout'u bir kez hesapla.
-    void node.offsetWidth;
-    node.style.setProperty("--drag-x", "0px");
-  };
-
-  // FIX #15: Sürükleme sonrası oluşan tıklamayı bir süre bastır
-  const suppressNextClick = () => {
-    suppressClickRef.current = true;
-    if (suppressTimerRef.current) window.clearTimeout(suppressTimerRef.current);
-    suppressTimerRef.current = window.setTimeout(() => {
-      suppressClickRef.current = false;
-      suppressTimerRef.current = null;
-    }, 400);
-  };
-
-  // FIX #13/#15: Dokunma başlangıcını kaydet
-  const handleCarouselTouchStart = (e: React.TouchEvent) => {
-    programmaticScrollRef.current = false;
-    // FIX #16: Mobilde kaydırmayı tarayıcı yapar; JS'e karışma.
-    if (isMobileViewport()) return;
-    const t = e.touches[0];
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
-    dragActiveRef.current = false;
-    suppressClickRef.current = false;
-  };
-
-  // FIX #15: Parmak hareket ettikçe kartlar parmağı takip etsin (drag-follow)
-  const handleCarouselTouchMove = (e: React.TouchEvent) => {
-    if (isMobileViewport()) return;
-    const start = touchStartRef.current;
-    if (!start) return;
-    const t = e.touches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-
-    if (!dragActiveRef.current) {
-      // Yatay hareket dikeyden baskın değilse sayfa kaydırmasına karışma.
-      if (Math.abs(dx) < DRAG_START_PX || Math.abs(dx) <= Math.abs(dy)) return;
-      dragActiveRef.current = true;
-      carouselRef.current?.classList.add("is-dragging");
-      suppressNextClick();
-    }
-
-    // İlk/son kartta lastik bant etkisi: daha zor hareket etsin.
-    const currentIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
-    const atStart = currentIndex <= 0 && dx > 0;
-    const atEnd = currentIndex >= filteredCards.length - 1 && dx < 0;
-    const applied = atStart || atEnd ? dx * 0.3 : dx;
-    carouselRef.current?.style.setProperty("--drag-x", `${applied}px`);
-  };
-
-  // FIX #15: Parmak kalkınca eşik aşıldıysa kart değiştir, yoksa geri bırak
-  const handleCarouselTouchEnd = (e: React.TouchEvent) => {
-    if (isMobileViewport()) return;
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
-    if (!start) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    const wasDragging = dragActiveRef.current;
-
-    // Önce animasyonu geri aç, sonra ofseti sıfırla → yumuşak geri dönüş.
-    resetCarouselDrag();
-
-    if (!wasDragging) return;
-    suppressNextClick();
-    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) {
-      if (dx < 0) goToCardOffset(1); // sola kaydır → sonraki kart
-      else goToCardOffset(-1); // sağa kaydır → önceki kart
-    }
-  };
-
-  // FIX #15: Dokunma iptal edilirse (sistem jesti vb.) kartları geri al
-  const handleCarouselTouchCancel = () => {
-    touchStartRef.current = null;
-    resetCarouselDrag();
-  };
-
-  // FIX #16: Mobilde native kaydırma bittiğinde en yakın kartı seç.
-  // (Ok butonları, silme ve "merkezdeki kart" durumu bununla senkron kalır.)
+  // FIX #20: Mobilde native kaydırma bittiğinde en yakın kartı seç.
   const handleCarouselScroll = () => {
-    if (!isMobileViewport()) return;
     if (scrollSyncTimerRef.current) window.clearTimeout(scrollSyncTimerRef.current);
     scrollSyncTimerRef.current = window.setTimeout(() => {
       scrollSyncTimerRef.current = null;
@@ -446,16 +341,15 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     }, 90);
   };
 
-  // FIX #16: Seçili kart değişince (ok butonları / karta dokunma) mobilde ortala.
+  // FIX #20: Seçili kart değişince (ok butonları / karta dokunma) ortala.
   useEffect(() => {
-    if (step !== "detail" || !selectedCardId || !isMobileViewport()) return;
+    if (step !== "detail" || !selectedCardId) return;
     const node = carouselRef.current;
     if (!node) return;
     const el = node.querySelector<HTMLElement>(`[data-card-id="${selectedCardId}"]`);
     if (!el) return;
     const center = node.scrollLeft + node.clientWidth / 2;
     const elCenter = el.offsetLeft + el.offsetWidth / 2;
-    // Zaten ortadaysa hiç oynatma (kullanıcı kaydırmasıyla çakışmasın).
     if (Math.abs(elCenter - center) <= el.offsetWidth * 0.5) return;
     programmaticScrollRef.current = true;
     const target = el.offsetLeft - (node.clientWidth - el.offsetWidth) / 2;
@@ -677,40 +571,27 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                   ref={carouselRef}
                   className="detail-3d-carousel"
                   role="list"
-                  aria-label="3D kart detayı"
-                  onTouchStart={handleCarouselTouchStart}
-                  onTouchMove={handleCarouselTouchMove}
-                  onTouchEnd={handleCarouselTouchEnd}
-                  onTouchCancel={handleCarouselTouchCancel}
+                  aria-label="Kart detayı"
                   onScroll={handleCarouselScroll}
                 >
-                  {filteredCards.map((item, index) => {
+                  {filteredCards.map((item) => {
                     const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
                     const topic = topicMap.get(item.topicId);
-                    const centerIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
-                    const offset = index - centerIndex;
-                    let position: "far-left" | "left" | "center" | "right" | "far-right" = "center";
-                    if (offset <= -2) position = "far-left";
-                    else if (offset === -1) position = "left";
-                    else if (offset === 1) position = "right";
-                    else if (offset >= 2) position = "far-right";
-                    const isCenter = position === "center";
                     return (
                       <button
                         type="button"
                         key={item.id}
                         data-card-id={item.id}
-                        className={`detail-card ${position} ${isCenter ? "center" : ""}`}
+                        className="detail-card"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // FIX #13: swipe sonrası oluşan tıklamayı yoksay
+                          // Swipe sonrası oluşan tıklamayı yoksay
                           if (suppressClickRef.current) return;
                           tap();
                           setSelectedCardId(item.id);
                           playSuccess();
                         }}
                         aria-label={`${language.name} · ${topic?.title ?? "Konu"}`}
-                        style={{ zIndex: isCenter ? 40 : 30 - Math.abs(offset) }}
                       >
                         <img
                           className="detail-card__img"
@@ -731,7 +612,6 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                             img.src = DEFAULT_IMAGE;
                           }}
                         />
-                        <div className="detail-card__glare" />
                         <div className="detail-card__info">
                           <span className="detail-card__icon">{language.icon}</span>
                           <span className="detail-card__title">{language.name}</span>

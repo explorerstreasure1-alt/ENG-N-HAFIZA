@@ -821,37 +821,44 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   padding: 0 0 26px;
 }
 .detail-3d-carousel {
-  perspective: 1400px;
-  /* FIX #15: Parmakla sürüklerken tüm kartları yatayda kaydıran değişken.
-     JS, touchmove sırasında bu değeri günceller (drag-follow). */
-  --drag-x: 0px;
-  --side-offset: 100px;
-  --far-offset: 200px;
-  display: flex; justify-content: center; align-items: center;
-  min-height: 470px; position: relative; width: 100%;
-  touch-action: pan-y;
+  /* FIX #20: Düz 2D yatay karusel. 3D perspectiva kaldırıldı.
+     Tarayıcı donanım hızlandırmalı kaydırmayı yapıyor, JS ile koordinat
+     hesaplama yok → parmakla sürüklemede donma yok. */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 6%;
+  padding: 6px 6% 10px;
+  min-height: 0;
+  width: 100%;
+  touch-action: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.detail-3d-carousel::-webkit-scrollbar { display: none; }
 .detail-card {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 340px; height: 460px;
-  border-radius: 30px;
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(88vw, calc(75dvh * 0.75));
+  max-height: 75dvh;
+  border-radius: 24px;
   overflow: hidden;
   border: 2px solid rgba(255,255,255,.7);
   background: #fff;
   box-shadow: 0 28px 64px rgba(27,42,74,.14);
-  /* FIX #15: Yalnızca transform/opacity animate edilir. "transition: all"
-     ile box-shadow/filter'ın her karede yeniden çizilmesi mobilde fotoğraf
-     bozulmasına (tearing/bulanıklık) yol açıyordu. */
-  transition: transform .55s cubic-bezier(.22,.61,.36,1), opacity .45s ease;
+  transition: opacity .4s ease;
   cursor: pointer;
-  display: block;
-  will-change: transform, opacity;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-tap-highlight-color: transparent;
-  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  flex: 0 0 auto;
 }
 /* FIX #15: Sürükleme sırasında kartlar parmağı gecikmesiz takip etsin. */
 .detail-3d-carousel.is-dragging .detail-card {
@@ -860,34 +867,30 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 }
 .detail-card.center {
   z-index: 40;
-  transform: translate(calc(-50% + var(--drag-x, 0px)), -50%) scale(1) rotateY(0deg);
+  transform: none;
   opacity: 1;
   box-shadow: 0 40px 80px rgba(27,42,74,.22);
 }
 .detail-card.left {
   z-index: 30;
-  transform: translate(calc(-50% - var(--side-offset, 100px) + var(--drag-x, 0px)), -50%) scale(.84) rotateY(-20deg);
+  transform: none;
   opacity: .72;
 }
 .detail-card.right {
   z-index: 30;
-  transform: translate(calc(-50% + var(--side-offset, 100px) + var(--drag-x, 0px)), -50%) scale(.84) rotateY(20deg);
+  transform: none;
   opacity: .72;
 }
-.detail-card.far-left { transform: translate(calc(-50% - var(--far-offset, 200px) + var(--drag-x, 0px)), -50%) scale(.62) rotateY(-32deg); opacity: .38; z-index: 20; }
-.detail-card.far-right { transform: translate(calc(-50% + var(--far-offset, 200px) + var(--drag-x, 0px)), -50%) scale(.62) rotateY(32deg); opacity: .38; z-index: 20; }
+.detail-card.far-left { transform: none; opacity: .38; z-index: 20; }
+.detail-card.far-right { transform: none; opacity: .38; z-index: 20; }
 .detail-card:not(.center) { opacity: .72; }
 .detail-card__img {
-  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  width: 90%; height: auto; object-fit: contain; object-position: center;
   background: #fbfaf8; display: block;
-  filter: contrast(1.15) saturate(1.25) brightness(1.05);
-  /* FIX #15: Görseli ayrı GPU katmanına al; 3D dönerken sürekli yeniden
-     rasterize edilmesini engeller. */
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  filter: none;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
   pointer-events: none;
-  -webkit-user-drag: none;
 }
 .detail-card__glare {
   position: absolute; inset: 0;
@@ -950,37 +953,44 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   padding: 0 0 26px;
 }
 .detail-3d-carousel {
-  perspective: 1400px;
-  /* FIX #15: Parmakla sürüklerken tüm kartları yatayda kaydıran değişken.
-     JS, touchmove sırasında bu değeri günceller (drag-follow). */
-  --drag-x: 0px;
-  --side-offset: 100px;
-  --far-offset: 200px;
-  display: flex; justify-content: center; align-items: center;
-  min-height: 470px; position: relative; width: 100%;
-  touch-action: pan-y;
+  /* FIX #20: Düz 2D yatay karusel. 3D perspectiva kaldırıldı.
+     Tarayıcı donanım hızlandırmalı kaydırmayı yapıyor, JS ile koordinat
+     hesaplama yok → parmakla sürüklemede donma yok. */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 6%;
+  padding: 6px 6% 10px;
+  min-height: 0;
+  width: 100%;
+  touch-action: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.detail-3d-carousel::-webkit-scrollbar { display: none; }
 .detail-card {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 340px; height: 460px;
-  border-radius: 30px;
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(88vw, calc(75dvh * 0.75));
+  max-height: 75dvh;
+  border-radius: 24px;
   overflow: hidden;
   border: 2px solid rgba(255,255,255,.7);
   background: #fff;
   box-shadow: 0 28px 64px rgba(27,42,74,.14);
-  /* FIX #15: Yalnızca transform/opacity animate edilir. "transition: all"
-     ile box-shadow/filter'ın her karede yeniden çizilmesi mobilde fotoğraf
-     bozulmasına (tearing/bulanıklık) yol açıyordu. */
-  transition: transform .55s cubic-bezier(.22,.61,.36,1), opacity .45s ease;
+  transition: opacity .4s ease;
   cursor: pointer;
-  display: block;
-  will-change: transform, opacity;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-tap-highlight-color: transparent;
-  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  flex: 0 0 auto;
 }
 /* FIX #15: Sürükleme sırasında kartlar parmağı gecikmesiz takip etsin. */
 .detail-3d-carousel.is-dragging .detail-card {
@@ -989,34 +999,30 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 }
 .detail-card.center {
   z-index: 40;
-  transform: translate(calc(-50% + var(--drag-x, 0px)), -50%) scale(1) rotateY(0deg);
+  transform: none;
   opacity: 1;
   box-shadow: 0 40px 80px rgba(27,42,74,.22);
 }
 .detail-card.left {
   z-index: 30;
-  transform: translate(calc(-50% - var(--side-offset, 100px) + var(--drag-x, 0px)), -50%) scale(.84) rotateY(-20deg);
+  transform: none;
   opacity: .72;
 }
 .detail-card.right {
   z-index: 30;
-  transform: translate(calc(-50% + var(--side-offset, 100px) + var(--drag-x, 0px)), -50%) scale(.84) rotateY(20deg);
+  transform: none;
   opacity: .72;
 }
-.detail-card.far-left { transform: translate(calc(-50% - var(--far-offset, 200px) + var(--drag-x, 0px)), -50%) scale(.62) rotateY(-32deg); opacity: .38; z-index: 20; }
-.detail-card.far-right { transform: translate(calc(-50% + var(--far-offset, 200px) + var(--drag-x, 0px)), -50%) scale(.62) rotateY(32deg); opacity: .38; z-index: 20; }
+.detail-card.far-left { transform: none; opacity: .38; z-index: 20; }
+.detail-card.far-right { transform: none; opacity: .38; z-index: 20; }
 .detail-card:not(.center) { opacity: .72; }
 .detail-card__img {
-  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  width: 90%; height: auto; object-fit: contain; object-position: center;
   background: #fbfaf8; display: block;
-  filter: contrast(1.15) saturate(1.25) brightness(1.05);
-  /* FIX #15: Görseli ayrı GPU katmanına al; 3D dönerken sürekli yeniden
-     rasterize edilmesini engeller. */
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  filter: none;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
   pointer-events: none;
-  -webkit-user-drag: none;
 }
 .detail-card__glare {
   position: absolute; inset: 0;
@@ -1141,36 +1147,20 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 
 /* Telefon: kartlar biraz küçülsün, sahne kısalsın — 3D görünüm sabit kalır */
 @media (max-width: 620px) {
-  .carousel-wrap { min-height: 440px; }
-  .carousel-3d { min-height: 376px; }
-  .card-3d { width: 280px; height: 380px; }
-  .card-3d__img { height: 100%; object-fit: contain; }
-  .detail-3d-wrap { min-height: 440px; }
-  .detail-3d-carousel { min-height: 376px; }
-  .detail-card { width: 280px; height: 380px; }
-  .detail-card__img { height: 100%; object-fit: contain; }
-  .detail-card.far-left,
-  .detail-card.far-right { opacity: .28; }
-}
-
-/* FIX #20: TELEFON — düz yatay karusel, 3D yok, tam ekran büyük kart.
-   Tarayıcının kendi yatay kaydırması (scroll-snap) çalıştığı için parmakla
-   sürüklerken donma/bozulma yok, kart birebir takip eder ve kendi kendine
-   oturur. */
-@media (max-width: 620px) {
-  .detail-3d-wrap { padding: 0 0 10px; min-height: 0; }
+  .detail-3d-wrap { padding: 0 0 8px; min-height: 0; }
   .detail-3d-carousel {
     perspective: none;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     justify-content: flex-start;
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: 4%;
-    padding: 4px 4% 8px;
+    scroll-padding-inline: 6%;
+    padding: 4px 6% 8px;
     min-height: 0;
+    width: 100%;
     touch-action: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -1186,20 +1176,18 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     position: relative;
     top: auto;
     left: auto;
-    width: 92%;
-    margin: 0 auto;
-    flex: 0 0 100%;
+    width: min(88vw, calc(75dvh * 0.75));
+    max-height: 75dvh;
     height: auto;
-    max-height: clamp(420px, calc(100svh - 220px), 820px);
     border-radius: 24px;
+    overflow: hidden;
     border-width: 2px;
-    transform: none !important;
-    opacity: 1 !important;
-    z-index: auto !important;
+    transform: none;
+    opacity: 1;
+    z-index: auto;
     scroll-snap-align: center;
-    transition: none !important;
+    transition: none;
     will-change: auto;
-    -webkit-backface-visibility: visible;
     backface-visibility: visible;
     isolation: auto;
     box-shadow: 0 12px 28px rgba(27,42,74,.16);
@@ -1217,8 +1205,7 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 
   .detail-card__img {
     filter: none;
-    transform: none !important;
-    -webkit-backface-visibility: visible;
+    transform: none;
     backface-visibility: visible;
     width: 90%;
     height: auto;
