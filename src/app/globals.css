@@ -1161,8 +1161,8 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     overflow-y: hidden;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: 9%;
-    padding: 6px 9% 14px;
+    scroll-padding-inline: 4%;
+    padding: 4px 4% 10px;
     min-height: 0;
     touch-action: auto;
     -webkit-overflow-scrolling: touch;
@@ -1182,7 +1182,10 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     left: auto;
     flex: 0 0 100%;
     width: 100%;
-    height: 348px;
+    /* FIX #17: Kart ekranı kaplasın; alttaki boşluk kalmasın.
+       svh kullanılıyor: adres çubuğu gizlenince yükseklik zıplamasın. */
+    height: 520px;
+    height: clamp(400px, calc(100svh - 215px), 820px);
     border-radius: 22px;
     border-width: 1.5px;
     transform: none;
