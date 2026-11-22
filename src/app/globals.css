@@ -1180,14 +1180,15 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     position: relative;
     top: auto;
     left: auto;
-    flex: 0 0 100%;
-    width: 100%;
-    /* FIX #17: Kart ekranı kaplasın; alttaki boşluk kalmasın.
-       svh kullanılıyor: adres çubuğu gizlenince yükseklik zıplamasın. */
-    height: 520px;
-    height: clamp(400px, calc(100svh - 215px), 820px);
-    border-radius: 22px;
-    border-width: 1.5px;
+    width: 92%;
+    margin: 0 auto;
+    /* FIX #19: Kart büyük ve 3:4 portre oranında. Yükseklik ekrana göre,
+       ama en fazla svh - 200px (üst+alt boşluk kalır). */
+    aspect-ratio: 3 / 4;
+    height: auto;
+    max-height: clamp(380px, calc(100svh - 200px), 720px);
+    border-radius: 24px;
+    border-width: 2px;
     transform: none;
     opacity: 1;
     z-index: auto !important;
@@ -1198,15 +1199,17 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     -webkit-backface-visibility: visible;
     backface-visibility: visible;
     isolation: auto;
-    box-shadow: 0 8px 18px rgba(27,42,74,.12);
-    /* Kaydırma sırasında kartın kendi içinde kalması → daha az boyama */
+    box-shadow: 0 12px 28px rgba(27,42,74,.16);
     contain: layout paint;
-    /* FIX #18: Görsel "cover" ile kırpılınca kenardaki yazılar kesiliyordu.
-       Kart zemini koyu → görsel tam sığdığında kenarda kalan boşluk
-       kartın parçası gibi görünür. */
-    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    box-sizing: border-box;
     background:
-      radial-gradient(120% 90% at 50% 0%, #24324f 0%, #131b2f 55%, #0b1020 100%);
+      radial-gradient(140% 100% at 50% 0%, #24324f 0%, #131b2f 45%, #0b1020 100%);
   }
   /* Sadece ortadaki kartta silme butonu görünsün (yan kartlarda karışıklık) */
   .detail-card:not(.center) .card-delete { display: none; }
@@ -1216,9 +1219,14 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     transform: none;
     -webkit-backface-visibility: visible;
     backface-visibility: visible;
-    /* FIX #18: Görselin TAMAMI görünsün (kırpma yok). */
+    /* FIX #19: Fotoğraf orijinal 3:4 oranında, tamamı görünsün (kırpma yok).
+       width 88% = kenarlarda boşluk bırakıyor, yazıların sonları kesilmez. */
+    width: 88%;
+    height: auto;
+    max-height: 78%;
     object-fit: contain;
-    border-radius: 14px;
+    border-radius: 18px;
+    display: block;
   }
   .card-3d__img { filter: none; }
 }
