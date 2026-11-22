@@ -777,7 +777,7 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
 .card-3d.far-left { transform: translate(calc(-50% - 200px), -50%) scale(.62) rotateY(-32deg); opacity: .38; z-index: 20; }
 .card-3d.far-right { transform: translate(calc(-50% + 200px), -50%) scale(.62) rotateY(32deg); opacity: .38; z-index: 20; }
 
-/* Telefon: kartlar biraz küçülsün, sahne kısalsın */
+/* Telefon: kartlar büyütsün, fotoğraf tam görünsün */
 @media (max-width: 620px) {
   .carousel-wrap { min-height: 440px; }
   .carousel-3d { min-height: 376px; }
@@ -785,8 +785,8 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   .card-3d__img { height: 100%; object-fit: contain; width: 90%; }
   .detail-3d-wrap { min-height: 440px; }
   .detail-3d-carousel { min-height: 376px; }
-  .detail-card { width: 280px; height: 380px; }
-  .detail-card__img { height: 100%; object-fit: contain; width: 90%; }
+  .detail-card { width: min(94vw, calc(88dvh * 0.75)); height: auto; }
+  .detail-card__img { height: auto; object-fit: contain; width: 96%; }
 }
 .card-3d:not(.center) { opacity: .72; }
 .card-3d__img {
@@ -1176,12 +1176,12 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     position: relative;
     top: auto;
     left: auto;
-    width: min(88vw, calc(75dvh * 0.75));
-    max-height: 75dvh;
+    width: min(94vw, calc(88dvh * 0.75));
+    max-height: 88dvh;
     height: auto;
-    border-radius: 24px;
+    border-radius: 28px;
     overflow: hidden;
-    border-width: 2px;
+    border: 2.5px solid rgba(255,255,255,.9);
     transform: none;
     opacity: 1;
     z-index: auto;
@@ -1190,29 +1190,29 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     will-change: auto;
     backface-visibility: visible;
     isolation: auto;
-    box-shadow: 0 12px 28px rgba(27,42,74,.16);
+    box-shadow: 0 20px 40px rgba(27,42,74,.25);
     contain: layout paint;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 16px;
+    gap: 12px;
+    padding: 14px;
     box-sizing: border-box;
-    background:
-      radial-gradient(140% 100% at 50% 0%, #24324f 0%, #131b2f 45%, #0b1020 100%);
+    background: #ffffff;
   }
 
   .detail-card__img {
     filter: none;
     transform: none;
     backface-visibility: visible;
-    width: 90%;
+    width: 96%;
     height: auto;
-    max-height: 80%;
+    max-height: 82%;
     object-fit: contain;
-    border-radius: 18px;
+    border-radius: 20px;
     display: block;
+    box-shadow: 0 10px 20px rgba(0,0,0,.12);
   }
 
   .detail-card__info { display: none; }
