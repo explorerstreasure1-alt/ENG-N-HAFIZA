@@ -48,6 +48,10 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
   // kaydırma sonrası tıklamayı bastırma bayrağı.
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const suppressClickRef = useRef(false);
+  // FIX #15: Sürükleme takibi (drag-follow) için ek ref'ler.
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const dragActiveRef = useRef(false);
+  const suppressTimerRef = useRef<number | null>(null);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -315,14 +319,64 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     playClick();
   };
 
-  // FIX #13: Dokunma başlangıcını kaydet
+  // FIX #15: Sürükleme eşikleri
+  const DRAG_START_PX = 6; // yatay sürüklemenin başlaması için minimum hareket
+  const SWIPE_PX = 46; // kart değiştirmek için gereken mesafe
+
+  // FIX #15: Sürükleme durumunu sıfırla (kartlar yerine yumuşakça dönsün)
+  const resetCarouselDrag = () => {
+    const node = carouselRef.current;
+    dragActiveRef.current = false;
+    if (!node) return;
+    node.classList.remove("is-dragging");
+    // Geçişin yeniden etkin olduğundan emin olmak için layout'u bir kez hesapla.
+    void node.offsetWidth;
+    node.style.setProperty("--drag-x", "0px");
+  };
+
+  // FIX #15: Sürükleme sonrası oluşan tıklamayı bir süre bastır
+  const suppressNextClick = () => {
+    suppressClickRef.current = true;
+    if (suppressTimerRef.current) window.clearTimeout(suppressTimerRef.current);
+    suppressTimerRef.current = window.setTimeout(() => {
+      suppressClickRef.current = false;
+      suppressTimerRef.current = null;
+    }, 400);
+  };
+
+  // FIX #13/#15: Dokunma başlangıcını kaydet
   const handleCarouselTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
     touchStartRef.current = { x: t.clientX, y: t.clientY };
+    dragActiveRef.current = false;
     suppressClickRef.current = false;
   };
 
-  // FIX #13: Parmak kalkınca yatay kaydırmayı ölç ve karta geç
+  // FIX #15: Parmak hareket ettikçe kartlar parmağı takip etsin (drag-follow)
+  const handleCarouselTouchMove = (e: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    if (!start) return;
+    const t = e.touches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+
+    if (!dragActiveRef.current) {
+      // Yatay hareket dikeyden baskın değilse sayfa kaydırmasına karışma.
+      if (Math.abs(dx) < DRAG_START_PX || Math.abs(dx) <= Math.abs(dy)) return;
+      dragActiveRef.current = true;
+      carouselRef.current?.classList.add("is-dragging");
+      suppressNextClick();
+    }
+
+    // İlk/son kartta lastik bant etkisi: daha zor hareket etsin.
+    const currentIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
+    const atStart = currentIndex <= 0 && dx > 0;
+    const atEnd = currentIndex >= filteredCards.length - 1 && dx < 0;
+    const applied = atStart || atEnd ? dx * 0.3 : dx;
+    carouselRef.current?.style.setProperty("--drag-x", `${applied}px`);
+  };
+
+  // FIX #15: Parmak kalkınca eşik aşıldıysa kart değiştir, yoksa geri bırak
   const handleCarouselTouchEnd = (e: React.TouchEvent) => {
     const start = touchStartRef.current;
     touchStartRef.current = null;
@@ -330,13 +384,23 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     const t = e.changedTouches[0];
     const dx = t.clientX - start.x;
     const dy = t.clientY - start.y;
-    // Yatay hareket yeterince büyükse ve dikey kaydırmadan baskınsa: swipe say
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-      suppressClickRef.current = true;
-      window.setTimeout(() => { suppressClickRef.current = false; }, 60);
-      if (dx < 0) goToCardOffset(1);   // sola kaydır → sonraki kart
-      else goToCardOffset(-1);         // sağa kaydır → önceki kart
+    const wasDragging = dragActiveRef.current;
+
+    // Önce animasyonu geri aç, sonra ofseti sıfırla → yumuşak geri dönüş.
+    resetCarouselDrag();
+
+    if (!wasDragging) return;
+    suppressNextClick();
+    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) goToCardOffset(1); // sola kaydır → sonraki kart
+      else goToCardOffset(-1); // sağa kaydır → önceki kart
     }
+  };
+
+  // FIX #15: Dokunma iptal edilirse (sistem jesti vb.) kartları geri al
+  const handleCarouselTouchCancel = () => {
+    touchStartRef.current = null;
+    resetCarouselDrag();
   };
 
   const back = () => {
@@ -545,12 +609,14 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
               </div>
               <div className="detail-3d-wrap">
                 <div
+                  ref={carouselRef}
                   className="detail-3d-carousel"
                   role="list"
                   aria-label="3D kart detayı"
                   onTouchStart={handleCarouselTouchStart}
+                  onTouchMove={handleCarouselTouchMove}
                   onTouchEnd={handleCarouselTouchEnd}
-                  style={{ touchAction: "pan-y" }}
+                  onTouchCancel={handleCarouselTouchCancel}
                 >
                   {filteredCards.map((item, index) => {
                     const language = languageMap.get(item.languageId) ?? LANGUAGE_SEEDS[0];
