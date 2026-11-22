@@ -1201,6 +1201,12 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     box-shadow: 0 8px 18px rgba(27,42,74,.12);
     /* Kaydırma sırasında kartın kendi içinde kalması → daha az boyama */
     contain: layout paint;
+    /* FIX #18: Görsel "cover" ile kırpılınca kenardaki yazılar kesiliyordu.
+       Kart zemini koyu → görsel tam sığdığında kenarda kalan boşluk
+       kartın parçası gibi görünür. */
+    padding: 14px;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #24324f 0%, #131b2f 55%, #0b1020 100%);
   }
   /* Sadece ortadaki kartta silme butonu görünsün (yan kartlarda karışıklık) */
   .detail-card:not(.center) .card-delete { display: none; }
@@ -1210,6 +1216,9 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     transform: none;
     -webkit-backface-visibility: visible;
     backface-visibility: visible;
+    /* FIX #18: Görselin TAMAMI görünsün (kırpma yok). */
+    object-fit: contain;
+    border-radius: 14px;
   }
   .card-3d__img { filter: none; }
 }
