@@ -42,6 +42,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
   const [toast, setToast] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [flipped, setFlipped] = useState(false);
+  const [topicSearch, setTopicSearch] = useState("");
   const toastTimer = useRef<number | null>(null);
   const soundReady = useRef(false);
   const suppressClickRef = useRef(false);
@@ -305,6 +306,10 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     (item) => item.languageId === state.languageId && item.topicId === state.topicId,
   );
 
+  const filteredTopics = TOPICS.filter((topic) =>
+    topic.title.toLowerCase().includes(topicSearch.toLowerCase()),
+  );
+
   // FIX #20: Seçili karttan ±1 yönde geçiş yap (ok butonları için ortak)
   const goToCardOffset = (dir: -1 | 1) => {
     const currentIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
@@ -454,9 +459,25 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                 <span style={{ display: "inline-block", padding: "6px 10px", borderRadius: 8, background: "rgba(139,0,0,.09)", color: "#8b0000", fontSize: 10, fontWeight: 850, letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 10 }}>
                   Adım 2 · Konu seç ({selectedLanguage.name})
                 </span>
+                <input
+                  type="text"
+                  placeholder="Konu ara..."
+                  value={topicSearch}
+                  onChange={(e) => setTopicSearch(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--line)",
+                    background: "var(--white)",
+                    fontSize: 14,
+                    marginBottom: 10,
+                    boxSizing: "border-box",
+                  }}
+                />
               </div>
               <div className="cute-grid">
-                {TOPICS.map((topic) => (
+                {filteredTopics.map((topic) => (
                   <button
                     type="button"
                     key={topic.id}
@@ -469,6 +490,11 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                     <span className="cute-card__sub">{topic.level}</span>
                   </button>
                 ))}
+                {filteredTopics.length === 0 && topicSearch.trim() && (
+                  <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "20px 0", color: "rgba(27,42,74,.5)" }}>
+                    Eşleşen konu bulunamadı.
+                  </div>
+                )}
               </div>
             </section>
           )}
