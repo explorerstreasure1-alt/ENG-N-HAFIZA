@@ -695,7 +695,7 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             <span className="step-number">03</span>
             <span><strong>Görsel yükle</strong><small>Fotoğraf veya galeri</small></span>
           </div>
-          {/* Yayına ekle ve Yapıştır butonları yan yana */}
+          {/* Yayına ekle ve Yapıştır butonları yan yana, eşit orantılı */}
           <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             <button
               type="button"
@@ -706,15 +706,17 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
               style={{
                 display: "inline-flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 6,
                 flex: 1,
-                padding: "10px 14px",
-                borderRadius: 12,
+                minHeight: "54px",
+                padding: 0,
+                borderRadius: "13px",
                 border: "1px solid rgba(139,0,0,.35)",
                 background: "rgba(139,0,0,.06)",
                 color: "#8b0000",
-                fontWeight: 800,
-                fontSize: 13,
+                fontSize: "16px",
+                fontWeight: 850,
                 cursor: busy || publishing ? "not-allowed" : "pointer",
               }}
             >
@@ -727,10 +729,10 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
               disabled={!draftImage || busy || publishing}
               style={{
                 flex: 1,
-                padding: "10px 14px",
-                borderRadius: 12,
-                fontSize: 13,
-                fontWeight: 800,
+                minHeight: "54px",
+                borderRadius: "13px",
+                fontSize: "16px",
+                fontWeight: 850,
               }}
             >
               {publishing ? "Ekleniyor..." : "Yayına ekle"}
