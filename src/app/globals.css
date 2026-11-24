@@ -831,8 +831,8 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 6%;
-  padding: 6px 6% 10px;
+  scroll-padding-inline: 4%;
+  padding: 4px 4% 10px;
   min-height: 0;
   width: 100%;
   touch-action: auto;
@@ -963,8 +963,8 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 6%;
-  padding: 6px 6% 10px;
+  scroll-padding-inline: 4%;
+  padding: 4px 4% 10px;
   min-height: 0;
   width: 100%;
   touch-action: auto;
@@ -1157,8 +1157,8 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
     overflow-y: hidden;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: 6%;
-    padding: 4px 6% 8px;
+    scroll-padding-inline: 4%;
+    padding: 4px 4% 8px;
     min-height: 0;
     width: 100%;
     touch-action: auto;

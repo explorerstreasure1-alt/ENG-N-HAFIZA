@@ -695,8 +695,8 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             <span className="step-number">03</span>
             <span><strong>Görsel yükle</strong><small>Fotoğraf veya galeri</small></span>
           </div>
-          {/* FIX #14: Mobilde panodaki görseli tek dokunuşla yapıştır */}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          {/* Yayına ekle ve Yapıştır butonları yan yana */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             <button
               type="button"
               onClick={pasteFromClipboard}
@@ -707,17 +707,33 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "7px 12px",
-                borderRadius: 10,
+                flex: 1,
+                padding: "10px 14px",
+                borderRadius: 12,
                 border: "1px solid rgba(139,0,0,.35)",
                 background: "rgba(139,0,0,.06)",
                 color: "#8b0000",
                 fontWeight: 800,
-                fontSize: 12,
+                fontSize: 13,
                 cursor: busy || publishing ? "not-allowed" : "pointer",
               }}
             >
               📋 Yapıştır
+            </button>
+            <button
+              type="button"
+              className="publish-button"
+              onClick={publish}
+              disabled={!draftImage || busy || publishing}
+              style={{
+                flex: 1,
+                padding: "10px 14px",
+                borderRadius: 12,
+                fontSize: 13,
+                fontWeight: 800,
+              }}
+            >
+              {publishing ? "Ekleniyor..." : "Yayına ekle"}
             </button>
           </div>
           <label className={`upload-zone ${draftImage ? "has-image" : ""}`} htmlFor="image-file">
@@ -772,14 +788,6 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
           <span className="summary-dot">·</span>
           <span className="summary-topic">{selectedTopic.title}</span>
         </div>
-        <button
-          type="button"
-          className="publish-button"
-          onClick={publish}
-          disabled={!draftImage || busy || publishing}
-        >
-          {publishing ? "Ekleniyor..." : "Yayına ekle"}
-        </button>
       </section>
 
       {toast && (
