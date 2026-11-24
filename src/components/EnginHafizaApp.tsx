@@ -480,6 +480,15 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                 <span style={{ display: "inline-block", padding: "6px 10px", borderRadius: 8, background: "rgba(139,0,0,.09)", color: "#8b0000", fontSize: 10, fontWeight: 850, letterSpacing: ".16em", textTransform: "uppercase", marginBottom: 10 }}>
                   Adım 3 · Kelime kartları
                 </span>
+                {/* Konulara hızlı dönüş butonu */}
+                <button type="button" onClick={() => { tap(); setStep("topic"); playClick(); }} style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  marginBottom: 10, padding: "8px 14px", borderRadius: 10,
+                  border: "1px solid rgba(139,0,0,.35)", background: "rgba(139,0,0,.06)",
+                  color: "#8b0000", fontWeight: 800, fontSize: 13, cursor: "pointer"
+                }}>
+                  ← Tüm konulara dön
+                </button>
               </div>
               {filteredCards.length === 0 ? (
                 <div className="empty-cute">
