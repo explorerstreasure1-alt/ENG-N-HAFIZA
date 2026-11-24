@@ -733,15 +733,23 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
             </button>
             <button
               type="button"
-              className="publish-button"
               onClick={publish}
               disabled={!draftImage || busy || publishing}
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
                 flex: 1,
                 minHeight: "54px",
+                padding: 0,
                 borderRadius: "13px",
+                border: "1px solid var(--accent)",
+                background: "var(--accent)",
+                color: "var(--white)",
                 fontSize: "16px",
                 fontWeight: 850,
+                cursor: busy || publishing ? "not-allowed" : "pointer",
               }}
             >
               {publishing ? "Ekleniyor..." : "Yayına ekle"}
