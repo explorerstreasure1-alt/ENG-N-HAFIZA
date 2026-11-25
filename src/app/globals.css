@@ -936,6 +936,13 @@ body.lightbox-open { overflow: hidden; position: fixed; width: 100%; }
   filter: drop-shadow(0 20px 30px rgba(27,42,74,.25));
 }
 .image-cell:active { transform: scale(.96); box-shadow: 0 32px 56px rgba(27,42,74,.24); }
+/* FIX #21: Seçili kart vurgusu (taşıma modu) */
+.image-cell.selected {
+  border-color: #8b0000;
+  box-shadow: 0 24px 48px rgba(139,0,0,.22);
+  background: rgba(139,0,0,.04);
+}
+.image-cell.move-mode { opacity: 1; }
 .image-cell__img {
   width: 100%; height: 100%; object-fit: contain; object-position: center; display: block;
 }

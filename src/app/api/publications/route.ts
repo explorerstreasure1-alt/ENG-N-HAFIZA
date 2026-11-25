@@ -1,4 +1,4 @@
-import { createPublication, deletePublication, getPublications } from "@/lib/publications";
+import { createPublication, deletePublication, getPublications, updatePublication } from "@/lib/publications";
 import { LANGUAGE_SEEDS, TOPICS } from "@/lib/seed";
 import { LEVELS, type Level, type Publication } from "@/lib/types";
 
@@ -49,6 +49,31 @@ export async function POST(request: Request) {
       { ok: false, error: `Sunucuya kaydedilemedi: ${message}` },
       { status: 500 },
     );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = (await request.json()) as {
+      id: string;
+      languageId?: string;
+      topicId?: string;
+      level?: Level;
+    };
+    if (!body.id) {
+      return Response.json({ ok: false, error: "Yayın ID gerekli" }, { status: 400 });
+    }
+    const publication = await updatePublication(body.id, {
+      languageId: body.languageId,
+      topicId: body.topicId,
+      level: body.level,
+    });
+    console.log("Engin Hafıza: publication updated:", publication.id, publication);
+    return Response.json({ ok: true, publication });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Engin Hafıza: yayın güncellenemedi.", message, error);
+    return Response.json({ ok: false, error: message }, { status: 500 });
   }
 }
 

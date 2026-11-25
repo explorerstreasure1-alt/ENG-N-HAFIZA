@@ -109,3 +109,17 @@ export async function deletePublication(id: string): Promise<void> {
     }
   }
 }
+
+/** Mevcut yayın'ın dil/konu/level bilgisini günceller (taşımak için). */
+export async function updatePublication(
+  id: string,
+  updates: Partial<Pick<Publication, "languageId" | "topicId" | "level">>,
+): Promise<Publication> {
+  const current = await readMetadata();
+  const index = current.findIndex((p) => p.id === id);
+  if (index === -1) throw new Error("Yayın bulunamadı");
+  const next = [...current];
+  next[index] = { ...next[index], ...updates };
+  await writeMetadata(next);
+  return next[index];
+}

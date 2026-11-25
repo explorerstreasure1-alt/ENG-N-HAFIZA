@@ -43,6 +43,12 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [flipped, setFlipped] = useState(false);
   const [topicSearch, setTopicSearch] = useState("");
+  // FIX #21: Yayın taşıma (move) özelliği
+  const [moveMode, setMoveMode] = useState(false);
+  const [movingSelection, setMovingSelection] = useState<Set<string>>(new Set());
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [moveTargetLanguage, setMoveTargetLanguage] = useState<string>(state.languageId);
+  const [moveTargetTopic, setMoveTargetTopic] = useState<string>(state.topicId);
   const toastTimer = useRef<number | null>(null);
   const soundReady = useRef(false);
   const suppressClickRef = useRef(false);
@@ -310,6 +316,66 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     topic.title.toLowerCase().includes(topicSearch.toLowerCase()),
   );
 
+  // FIX #21: Yayın taşıma (move) handler'ları
+  const toggleMoveMode = () => {
+    if (moveMode) {
+      setMoveMode(false);
+      setMovingSelection(new Set());
+      setShowMoveDialog(false);
+    } else {
+      setMoveMode(true);
+    }
+  };
+
+  const toggleCardSelection = (id: string) => {
+    setMovingSelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const isCardSelected = (id: string) => movingSelection.has(id);
+
+  const handleMoveConfirm = async () => {
+    if (movingSelection.size === 0) return;
+    const targetLanguage = moveTargetLanguage;
+    const targetTopic = moveTargetTopic;
+    const targetTopicObj = TOPICS.find((t) => t.id === targetTopic);
+    const targetLevel = targetTopicObj?.level ?? "A1";
+
+    // Tüm seçili kartları paralel olarak sunucuya gönder
+    await Promise.all(
+      [...movingSelection].map((id) =>
+        fetch("/api/publications", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, languageId: targetLanguage, topicId: targetTopic, level: targetLevel }),
+        }),
+      ),
+    );
+
+    // Yerel state'i güncelle
+    setState((previous) => ({
+      ...previous,
+      publications: (previous.publications || []).map((entry) =>
+        movingSelection.has(entry.id)
+          ? { ...entry, languageId: targetLanguage, topicId: targetTopic, level: targetLevel }
+          : entry,
+      ),
+    }));
+
+    setMovingSelection(new Set());
+    setMoveMode(false);
+    setShowMoveDialog(false);
+    notify(`${movingSelection.size} yayın taşındı.`);
+    playClick();
+  };
+
+  // Hedef konular (tüm konular dillere ortak)
+  const moveTargetTopics = TOPICS;
+
   // FIX #20: Seçili karttan ±1 yönde geçiş yap (ok butonları için ortak)
   const goToCardOffset = (dir: -1 | 1) => {
     const currentIndex = filteredCards.findIndex((p) => p.id === selectedCardId);
@@ -515,6 +581,17 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                 }}>
                   ← Tüm konulara dön
                 </button>
+                {/* Taşı butonu - sadece birden fazla yayın varsa görünür */}
+                {filteredCards.length > 1 && (
+                  <button type="button" onClick={toggleMoveMode} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    marginBottom: 10, marginLeft: 8, padding: "8px 14px", borderRadius: 10,
+                    border: "1px solid #8b0000", background: moveMode ? "#8b0000" : "var(--white)",
+                    color: moveMode ? "#fff" : "#8b0000", fontWeight: 800, fontSize: 13, cursor: "pointer"
+                  }}>
+                    {moveMode ? "İptal" : "🔀 Taşı"}
+                  </button>
+                )}
               </div>
               {filteredCards.length === 0 ? (
                 <div className="empty-cute">
@@ -532,9 +609,13 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                       <button
                         type="button"
                         key={item.id}
-                        className="image-cell"
+                        className={`image-cell ${isCardSelected(item.id) ? "selected" : ""} ${moveMode ? "move-mode" : ""}`}
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (moveMode) {
+                            toggleCardSelection(item.id);
+                            return;
+                          }
                           tap();
                           setSelectedCardId(item.id);
                           setFlipped(false);
@@ -543,6 +624,19 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
                         }}
                         aria-label={`Görsel ${index + 1}`}
                       >
+                        {moveMode && (
+                          <span className="move-checkbox" style={{
+                            position: "absolute", top: 8, left: 8, zIndex: 5,
+                            width: 24, height: 24, borderRadius: 6,
+                            border: `2px solid ${isCardSelected(item.id) ? "#8b0000" : "rgba(255,255,255,.7)"}`,
+                            background: isCardSelected(item.id) ? "#8b0000" : "rgba(255,255,255,.85)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: isCardSelected(item.id) ? "#fff" : "transparent",
+                            fontSize: 14, fontWeight: 900,
+                          }}>
+                            {isCardSelected(item.id) ? "✓" : ""}
+                          </span>
+                        )}
                         <img
                           className="image-cell__img"
                           src={toViewableUrl(item.imageUrl || DEFAULT_IMAGE)}
@@ -838,6 +932,97 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
       {toast && (
         <div className="toast toast-info" role="status">
           <span className="toast-dot" />{toast}
+        </div>
+      )}
+
+      {/* FIX #21: Yayın taşıma (move) dialog */}
+      {showMoveDialog && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 2000,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,.55)",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowMoveDialog(false); }}
+        >
+          <div
+            style={{
+              background: "#fff", borderRadius: 20, padding: 24, maxWidth: 320,
+              width: "88vw", boxShadow: "0 24px 60px rgba(0,0,0,.25)",
+            }}
+          >
+            <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 16, color: "#1b2a4a" }}>
+              Yayınları Taşı
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 800, color: "#8b0000", marginBottom: 6 }}>
+                Hedef Dil
+              </label>
+              <select
+                value={moveTargetLanguage}
+                onChange={(e) => {
+                  setMoveTargetLanguage(e.target.value);
+                  // İlk konuyu seç
+                  const first = moveTargetTopics[0];
+                  if (first) setMoveTargetTopic(first.id);
+                }}
+                style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 12,
+                  border: "1px solid var(--line)", background: "var(--white)", fontSize: 14,
+                }}
+              >
+                {LANGUAGE_SEEDS.map((lang) => (
+                  <option key={lang.id} value={lang.id}>{lang.name}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 800, color: "#8b0000", marginBottom: 6 }}>
+                Hedef Konu
+              </label>
+              <select
+                value={moveTargetTopic}
+                onChange={(e) => setMoveTargetTopic(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 12,
+                  border: "1px solid var(--line)", background: "var(--white)", fontSize: 14,
+                }}
+              >
+                {moveTargetTopics.map((topic) => (
+                  <option key={topic.id} value={topic.id}>
+                    {topic.title} ({topic.level})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setShowMoveDialog(false)}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 12, border: "1px solid var(--line)",
+                  background: "var(--white)", color: "#1b2a4a", fontWeight: 800, fontSize: 14, cursor: "pointer"
+                }}
+              >
+                İptal
+              </button>
+              <button
+                type="button"
+                onClick={handleMoveConfirm}
+                disabled={movingSelection.size === 0}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 12, border: 0,
+                  background: movingSelection.size > 0 ? "#8b0000" : "rgba(139,0,0,.2)",
+                  color: "#fff", fontWeight: 900, fontSize: 14, cursor: movingSelection.size > 0 ? "pointer" : "not-allowed"
+                }}
+              >
+                {movingSelection.size} Adı Taşı
+              </button>
+            </div>
+            <div style={{ marginTop: 12, fontSize: 11, color: "rgba(27,42,74,.5)", textAlign: "center" }}>
+              Seçilen {movingSelection.size} yayın hedef dil/konuya taşınacaktır.
+            </div>
+          </div>
         </div>
       )}
     </div>
