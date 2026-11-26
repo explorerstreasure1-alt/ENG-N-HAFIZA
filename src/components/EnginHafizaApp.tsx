@@ -327,6 +327,13 @@ export default function EnginHafizaApp({ initialPublications }: EnginHafizaAppPr
     }
   };
 
+  // Bir kart seçildiğinde taşıma dialog'unu aç
+  useEffect(() => {
+    if (moveMode && movingSelection.size > 0) {
+      setShowMoveDialog(true);
+    }
+  }, [moveMode, movingSelection]);
+
   const toggleCardSelection = (id: string) => {
     setMovingSelection((prev) => {
       const next = new Set(prev);
